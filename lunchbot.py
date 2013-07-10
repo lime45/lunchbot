@@ -78,12 +78,12 @@ class sqlite_db:
 class TestBot(irc.bot.SingleServerIRCBot):
     index=0;
     places = [];
-    def __init__(self, channel, nickname, server, port=6667):
+    def __init__(self, channel, nickname, server, database, port=6667):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.channel = channel
         self.last_nick = "";
         self.last_nick_count = 0;
-        self.db = sqlite_db("/tmp/messages.db");
+        self.db = sqlite_db(database);
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
@@ -161,7 +161,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.kick(nick,e.arguments[0].split()[1],"'cause " + e.source.nick + " told me to");
         if command == 0:
            self.db.add_message(e.arguments[0]);
-        c.privmsg(nick, self.db.random_message());
+        if randint(0,25) == 1:
+           c.privmsg(nick, self.db.random_message());
 
         return
 
@@ -222,8 +223,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
 def main():
     import sys
-    if len(sys.argv) != 4:
-        print "Usage: testbot <server[:port]> <channel> <nickname>"
+    if len(sys.argv) != 5:
+        print "Usage: testbot <server[:port]> <channel> <nickname> <database>"
         sys.exit(1)
 
     s = sys.argv[1].split(":", 1)
@@ -238,8 +239,9 @@ def main():
         port = 6667
     channel = sys.argv[2]
     nickname = sys.argv[3]
+    database = sys.argv[4]
 
-    bot = TestBot(channel, nickname, server, port)
+    bot = TestBot(channel, nickname, server, database, port)
     bot.start()
 
 if __name__ == "__main__":

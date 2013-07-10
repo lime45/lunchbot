@@ -34,6 +34,7 @@ from datetime import datetime
 import time
 import re
 import subprocess
+import sqlite3
 
 def reminder_thread(irc_con,channel):
    called = 0;
@@ -57,6 +58,23 @@ def reminder_thread(irc_con,channel):
       prev_day = cur_day;
       time.sleep(60);
 
+class sqlite_db:
+   def __init__(self,filename):
+      self.server=sqlite3.connect(filename);
+      curs = self.server.cursor();
+      curs.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, message TEXT)");
+      self.server.commit();
+   def add_message(self,msg):
+      curs = self.server.cursor();
+      str_arr = [(msg)]
+      curs.execute("INSERT INTO messages(message) VALUES (?)",str_arr);
+      self.server.commit();
+   def random_message(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM messages ORDER BY RANDOM() LIMIT 1");
+      return curs.fetchone()[1];
+
+
 class TestBot(irc.bot.SingleServerIRCBot):
     index=0;
     places = [];
@@ -65,6 +83,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         self.channel = channel
         self.last_nick = "";
         self.last_nick_count = 0;
+        self.db = sqlite_db("/tmp/messages.db");
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
@@ -106,6 +125,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         nick = e.target
+        command=0;
         if nick == self.connection.get_nickname() :
            nick = e.source.nick;
         if self.last_nick == e.source.nick:
@@ -121,6 +141,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         a = e.arguments[0].split(":", 1)
         if len(a) > 1 and irc.strings.lower(a[0]) == irc.strings.lower(self.connection.get_nickname()):
             self.do_command(e, a[1].strip())
+            command=1;
         elif re.match(".*time.*",e.arguments[0]):
            c.privmsg(nick, "Speaking of time, is it lunch time yet?");
         elif e.arguments[0] == e.arguments[0].upper():
@@ -138,6 +159,9 @@ class TestBot(irc.bot.SingleServerIRCBot):
               c.privmsg(nick, "Users: " + ", ".join(users))
         if re.match("rm .*",e.arguments[0]):
            c.kick(nick,e.arguments[0].split()[1],"'cause " + e.source.nick + " told me to");
+        if command == 0:
+           self.db.add_message(e.arguments[0]);
+        c.privmsg(nick, self.db.random_message());
 
         return
 

@@ -64,6 +64,10 @@ class sqlite_db:
       curs = self.server.cursor();
       curs.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, message TEXT)");
       self.server.commit();
+      curs.execute("CREATE TABLE IF NOT EXISTS restaurants (id INTEGER PRIMARY KEY AUTOINCREMENT, place TEXT, suggested INTEGER)");
+      self.server.commit();
+      curs.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, spoke INTEGER)");
+      self.server.commit();
    def add_message(self,msg):
       curs = self.server.cursor();
       str_arr = [(msg)]
@@ -73,6 +77,39 @@ class sqlite_db:
       curs = self.server.cursor();
       curs.execute("SELECT * FROM messages ORDER BY RANDOM() LIMIT 1");
       return curs.fetchone()[1];
+   def add_place(self,place):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM restaurants WHERE place=?",[(place)]);
+      entry = curs.fetchone();
+      if entry:
+         count = entry[2] + 1;
+         curs.execute("UPDATE restaurants SET suggested=? WHERE id =?",[(count),(entry[0])]);
+      else:
+         str_arr = [(place),1];
+         curs.execute("INSERT INTO restaurants(place,suggested) VALUES (?,?)",str_arr);
+      self.server.commit();
+   def random_place(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM restaurants ORDER BY RANDOM() LIMIT 1");
+      return curs.fetchone()[1];
+   def get_places(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM restaurants");
+      return curs.fetchall();
+   def inc_user(self,user):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM users WHERE name=?",[(user)]);
+      entry = curs.fetchone();
+      if entry:
+         count = entry[2] + 1;
+         curs.execute("UPDATE users SET spoke=? WHERE name=?",[(count),(user)]);
+      else:
+         curs.execute("INSERT INTO users(name,spoke) VALUES (?,?)",[(user),(1)]);
+      self.server.commit();
+   def get_users(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM users");
+      return curs.fetchall();
 
 
 class TestBot(irc.bot.SingleServerIRCBot):
@@ -175,22 +212,17 @@ class TestBot(irc.bot.SingleServerIRCBot):
         try:
            if cmd[0] == "stats":
               for chname, chobj in self.channels.items():
-                 c.privmsg(nick, "--- Channel statistics ---")
-                 c.privmsg(nick, "Channel: " + chname)
-                 users = chobj.users()
-                 users.sort()
-                 c.privmsg(nick, "Users: " + ", ".join(users))
-                 opers = chobj.opers()
-                 opers.sort()
-                 c.privmsg(nick, "Opers: " + ", ".join(opers))
-                 voiced = chobj.voiced()
-                 voiced.sort()
-                 c.privmsg(nick, "Voiced: " + ", ".join(voiced))
+                 places = self.db.get_places();
+                 for place in places:
+                    c.privmsg(nick, place[1] + " was suggested " + str(place[2]) + " times");
            elif cmd[0] == "lunch":
                 if len(cmd) > 1 :
                     self.places.insert(self.index, cmd[1]);
                     self.index = self.index + 1;
                     c.privmsg(nick, e.source.nick + " suggests " + cmd[1]);
+                    self.db.add_place(cmd[1]);
+           elif cmd[0] == "random":
+              c.privmsg(nick, "You could go to " + self.db.random_place());
            elif cmd[0] == "decide":
                 if self.index == 0:
                     c.privmsg(nick, "I can't decide if you don't give me any options");

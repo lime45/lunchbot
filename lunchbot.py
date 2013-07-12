@@ -36,27 +36,6 @@ import re
 import subprocess
 import sqlite3
 
-def reminder_thread(irc_con,channel):
-   called = 0;
-   prev_day="0"
-   while 1:
-      cur_day = datetime.now().strftime("%w");
-      cur_time = datetime.now().strftime("%H%M");
-      if cur_day != '0' and cur_day != '6':
-         if ('1200' >= cur_time) and (cur_time >= '1115'):
-            if called == 0:
-               called=1;
-               irc_con.privmsg(channel,"Looks like it is getting close to lunch time why don't you make some suggestions");
-               if cur_day == '5':
-                  irc_con.privmsg(channel,"It is beer with lunch Friday by the way");
-         else:
-            called=0;
-         if cur_time == '0930':
-            irc_con.privmsg(channel,"It is 9:30 is jwclark in yet?");
-      if prev_day != cur_day:
-         irc_con.topic(channel,re.sub("\n","",subprocess.check_output(["ddate"])));
-      prev_day = cur_day;
-      time.sleep(60);
 
 class sqlite_db:
    def __init__(self,filename):
@@ -128,7 +107,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def on_welcome(self, c, e):
         c.join(self.channel)
         c.privmsg(self.channel,"Hey guys. I'm " + c.get_nickname() + ". I'm here to help you pick somewhere to go for lunch");
-        thread.start_new_thread(reminder_thread,(c,self.channel));
+        thread.start_new_thread(self.reminder_thread,(c,self.channel));
 
     def on_join(self, c, e):
         nick = e.target
@@ -183,8 +162,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.privmsg(nick, "Speaking of time, is it lunch time yet?");
         elif e.arguments[0] == e.arguments[0].upper():
            c.privmsg(nick, "Quiet down son. I can hear you just fine");
-        elif re.match(".*" + self.connection.get_nickname() + ".*", e.arguments[0]):
-           c.privmsg(nick, "Are you talking about me? I'm not listening to you");
         if re.match(".*yocto.*",e.arguments[0]):
            c.privmsg(nick, re.sub("yocto","yacto",e.arguments[0]));
         elif re.match(".*environment.*",e.arguments[0]):
@@ -196,8 +173,11 @@ class TestBot(irc.bot.SingleServerIRCBot):
               c.privmsg(nick, "Users: " + ", ".join(users))
         if re.match("rm .*",e.arguments[0]):
            c.kick(nick,e.arguments[0].split()[1],"'cause " + e.source.nick + " told me to");
+        if re.match(".*talk to me.*",e.arguments[0],re.IGNORECASE):
+           c.privmsg(nick, self.db.random_message());
         if command == 0:
            self.db.add_message(e.arguments[0]);
+           self.db.inc_user(e.source.nick);
         if randint(0,25) == 1:
            c.privmsg(nick, self.db.random_message());
 
@@ -209,12 +189,16 @@ class TestBot(irc.bot.SingleServerIRCBot):
            nick = e.source.nick;
         c = self.connection
         cmd = args.split(" ",1);
-        try:
+#        try:
+        if 1 == 1:
            if cmd[0] == "stats":
               for chname, chobj in self.channels.items():
                  places = self.db.get_places();
                  for place in places:
                     c.privmsg(nick, place[1] + " was suggested " + str(place[2]) + " times");
+                 users = self.db.get_users();
+                 for user in users:
+                    c.privmsg(nick, user[1] + " spoke " + str(users[2]) + " times");
            elif cmd[0] == "lunch":
                 if len(cmd) > 1 :
                     self.places.insert(self.index, cmd[1]);
@@ -248,10 +232,35 @@ class TestBot(irc.bot.SingleServerIRCBot):
                     c.privmsg(fwd_args[0], "I do what I want. " + nick + " was trying to get me to say " + fwd_args[1]);
                 else:
                     c.privmsg(fwd_args[0],fwd_args[1]);
+           elif cmd[0] == "talk":
+              c.privmsg(self.channel, self.db.random_message());
+
            else:
                 c.privmsg(nick, "Whatchu talkin' 'bout Willis? I ain't goin' to " + args)
-        except:
-            c.privmsg(nick, "Someone tried to crash me");
+#        except:
+#            c.privmsg(nick, "Someone tried to crash me");
+    def reminder_thread(self,irc_con,channel):
+       called = 0;
+       prev_day="0"
+       while 1:
+          cur_day = datetime.now().strftime("%w");
+          cur_time = datetime.now().strftime("%H%M");
+          if cur_day != '0' and cur_day != '6':
+             if ('1200' >= cur_time) and (cur_time >= '1115'):
+                if called == 0:
+                   called=1;
+                   irc_con.privmsg(channel,"Looks like it is getting close to lunch time why don't you make some suggestions");
+                   if cur_day == '5':
+                      irc_con.privmsg(channel,"It is beer with lunch Friday by the way");
+             else:
+                called=0;
+             if cur_time == '0930':
+                irc_con.privmsg(channel,"It is 9:30 is jwclark in yet?");
+          if prev_day != cur_day:
+             irc_con.topic(channel,re.sub("\n","",subprocess.check_output(["ddate"])));
+          prev_day = cur_day;
+          time.sleep(60);
+
 
 def main():
     import sys

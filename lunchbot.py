@@ -189,8 +189,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
            nick = e.source.nick;
         c = self.connection
         cmd = args.split(" ",1);
-#        try:
-        if 1 == 1:
+        try:
            if cmd[0] == "stats":
               for chname, chobj in self.channels.items():
                  places = self.db.get_places();
@@ -237,8 +236,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
            else:
                 c.privmsg(nick, "Whatchu talkin' 'bout Willis? I ain't goin' to " + args)
-#        except:
-#            c.privmsg(nick, "Someone tried to crash me");
+        except:
+            c.privmsg(nick, "Someone tried to crash me");
     def reminder_thread(self,irc_con,channel):
        called = 0;
        prev_day="0"

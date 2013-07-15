@@ -198,7 +198,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                     c.privmsg(nick, place[1] + " was suggested " + str(place[2]) + " times");
                  users = self.db.get_users();
                  for user in users:
-                    c.privmsg(nick, user[1] + " spoke " + str(users[2]) + " times");
+                    c.privmsg(nick, user[1] + " spoke " + str(user[2]) + " times");
            elif cmd[0] == "lunch":
                 if len(cmd) > 1 :
                     self.places.insert(self.index, cmd[1]);

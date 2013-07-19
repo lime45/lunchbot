@@ -109,7 +109,15 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.privmsg(nick, name + " just hates me.");
            c.privmsg(name, "Come back to " + nick);
 
-
+    def on_quit(self,c,e):
+       name = re.sub("!.*","",e.source);
+       choice = randint(0,2);
+       if choice == 0:
+          c.privmsg(self.channel, "Quitter");
+       elif choice == 1:
+          c.privmsg(self.channel, "Quit quitting");
+       elif choice == 2:
+          c.privmsg(self.channel, nick + " just left without saying anything. How rude.");
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])

@@ -70,6 +70,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
     index=0;
     places = [];
     topic = "none";
+    talk_count = 0;
     def __init__(self, channel, nickname, server, database, port=6667):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.channel = channel
@@ -149,18 +150,27 @@ class TestBot(irc.bot.SingleServerIRCBot):
         elif re.match(".*environment.*",e.arguments[0]):
            c.privmsg(nick, re.sub("environment","environmental",e.arguments[0]));
         if e.arguments[0] == "ls":
+           command = 1;
            for chname, chobj in self.channels.items():
               users = chobj.users()
               users.sort()
               c.privmsg(nick, "Users: " + ", ".join(users))
         if re.match("rm .*",e.arguments[0]):
+           command = 1;
            c.kick(nick,e.arguments[0].split()[1],"'cause " + e.source.nick + " told me to");
         if re.match(".*talk to me.*",e.arguments[0],re.IGNORECASE):
+           command = 1;
            c.privmsg(nick, self.db.random_message());
+           self.talk_count = 5;
         if command == 0:
            self.db.add_message(e.arguments[0]);
            self.db.inc_user(e.source.nick);
-        if randint(0,25) == 1:
+        if self.talk_count > 0:
+           self.talk_count = self.talk_count - 1;
+           talk = 1;
+        else:
+           talk = randint(0,25);
+        if talk == 1:
            c.privmsg(nick, self.db.random_message());
         return
 
@@ -231,6 +241,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 else:
                     c.privmsg(fwd_args[0],fwd_args[1]);
            elif cmd[0] == "talk":
+              self.talk_count = 3;
               c.privmsg(self.channel, self.db.random_message());
            elif cmd[0] == "decision":
               self.lunch_decision_topic(c, cmd[1]);

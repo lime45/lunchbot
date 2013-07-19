@@ -175,7 +175,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         return
 
     def lunch_topic(self, irc_con):
-       cur_time = datetime.now().strftime("%h%m");
+       cur_time = datetime.now().strftime("%H%M");
        if ('1259' >= cur_time) and (cur_time >= '1115'):
           if self.index > 0:
              place_str = ", or ".join(map(str,self.places));
@@ -183,7 +183,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
              self.topic = "lunch";
 
     def lunch_decision_topic(self, irc_con, place):
-       cur_time = datetime.now().strftime("%h%m");
+       cur_time = datetime.now().strftime("%H%M");
        if ('1259' >= cur_time) and (cur_time >= '1115') :
           irc_con.topic(self.channel,"Everyone went to " + place + " and they left you behind.");
           self.topic = "lunch";

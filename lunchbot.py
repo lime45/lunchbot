@@ -69,6 +69,7 @@ class sqlite_db:
 class TestBot(irc.bot.SingleServerIRCBot):
     index=0;
     places = [];
+    topic = "none";
     def __init__(self, channel, nickname, server, database, port=6667):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.channel = channel
@@ -85,7 +86,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         thread.start_new_thread(self.reminder_thread,(c,self.channel));
 
     def on_join(self, c, e):
-        nick = e.target
+        nick = e.target;
         name = re.sub("!.*","",e.source);
         choice = randint(0,2);
         if choice == 0:
@@ -96,7 +97,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.privmsg(nick, name + " is just here for the food");
 
     def on_part(self, c, e):
-        nick = e.target
+        nick = e.target;
         name = re.sub("!.*","",e.source);
         choice = randint(0,2);
         if choice == 0:
@@ -161,8 +162,24 @@ class TestBot(irc.bot.SingleServerIRCBot):
            self.db.inc_user(e.source.nick);
         if randint(0,25) == 1:
            c.privmsg(nick, self.db.random_message());
-
         return
+
+    def lunch_topic(self, irc_con):
+       cur_time = datetime.now().strftime("%h%m");
+       if ('1259' >= cur_time) and (cur_time >= '1115'):
+          if self.index > 0:
+             place_str = ", or ".join(map(str,self.places));
+             irc_con.topic(self.channel,"Lunch suggestions: " + place_str + ".");
+             self.topic = "lunch";
+
+    def lunch_decision_topic(self, irc_con, place):
+       cur_time = datetime.now().strftime("%h%m");
+       if ('1259' >= cur_time) and (cur_time >= '1115') :
+          irc_con.topic(self.channel,"Everyone went to " + place + " and they left you behind.");
+          self.topic = "lunch";
+
+    def ddate_topic(self, irc_con):
+       irc_con.topic(self.channel,re.sub("\n","",subprocess.check_output(["ddate"])));
 
     def do_command(self, e, args):
         nick = e.target
@@ -185,6 +202,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                     self.index = self.index + 1;
                     c.privmsg(nick, e.source.nick + " suggests " + cmd[1]);
                     self.db.add_place(cmd[1]);
+                    self.lunch_topic(c);
            elif cmd[0] == "random":
               c.privmsg(nick, "You could go to " + self.db.random_place());
            elif cmd[0] == "decide":
@@ -214,6 +232,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
                     c.privmsg(fwd_args[0],fwd_args[1]);
            elif cmd[0] == "talk":
               c.privmsg(self.channel, self.db.random_message());
+           elif cmd[0] == "decision":
+              self.lunch_decision_topic(c, cmd[1]);
 
            else:
                 c.privmsg(nick, "Whatchu talkin' 'bout Willis? I ain't goin' to " + args)
@@ -232,12 +252,17 @@ class TestBot(irc.bot.SingleServerIRCBot):
                    irc_con.privmsg(channel,"Looks like it is getting close to lunch time why don't you make some suggestions");
                    if cur_day == '5':
                       irc_con.privmsg(channel,"It is beer with lunch Friday by the way");
-             else:
+                   if self.index > 0:
+                      self.lunch_topic(irc_con);
+             elif called == 1:
+                if self.topic == "lunch":
+                   self.ddate_topic(irc_con);
+                   self.topic = "ddate";
                 called=0;
              if cur_time == '0930':
                 irc_con.privmsg(channel,"It is 9:30 is jwclark in yet?");
           if prev_day != cur_day:
-             irc_con.topic(channel,re.sub("\n","",subprocess.check_output(["ddate"])));
+             self.ddate_topic(irc_con);
           prev_day = cur_day;
           time.sleep(60);
 

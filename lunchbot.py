@@ -143,7 +143,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
             command=1;
         elif re.match(".*time.*",e.arguments[0]):
            c.privmsg(nick, "Speaking of time, is it lunch time yet?");
-        elif e.arguments[0] == e.arguments[0].upper() and e.arguments[0] != e.arguments.lower():
+        elif e.arguments[0] == e.arguments[0].upper() and e.arguments[0] != e.arguments[0].lower():
            c.privmsg(nick, "Quiet down son. I can hear you just fine");
         if re.match(".*yocto.*",e.arguments[0]):
            c.privmsg(nick, re.sub("yocto","yacto",e.arguments[0]));

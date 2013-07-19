@@ -119,7 +119,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
        elif choice == 1:
           c.privmsg(self.channel, "Quit quitting");
        elif choice == 2:
-          c.privmsg(self.channel, nick + " just left without saying anything. How rude.");
+          c.privmsg(self.channel, name + " just left without saying anything. How rude.");
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])

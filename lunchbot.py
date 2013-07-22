@@ -124,6 +124,15 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
 
+    def random_talk(self,c):
+       msg = self.db.random_message();
+       for chname, chobj in self.channels.items():
+          users = chobj.users()
+       count = len(users);
+       user = users[randint(0,count-1)];
+       msg = re.sub(c.get_nickname(),user,msg);
+       c.privmsg(self.channel,msg);
+
     def on_pubmsg(self, c, e):
         nick = e.target
         command=0;
@@ -160,7 +169,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.kick(nick,e.arguments[0].split()[1],"'cause " + e.source.nick + " told me to");
         if re.match(".*talk to me.*",e.arguments[0],re.IGNORECASE):
            command = 1;
-           c.privmsg(nick, self.db.random_message());
            self.talk_count = 5;
         if command == 0:
            self.db.add_message(e.arguments[0]);
@@ -171,7 +179,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         else:
            talk = randint(0,25);
         if talk == 1:
-           c.privmsg(nick, self.db.random_message());
+           self.random_talk(c);
         return
 
     def lunch_topic(self, irc_con):
@@ -242,7 +250,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                     c.privmsg(fwd_args[0],fwd_args[1]);
            elif cmd[0] == "talk":
               self.talk_count = 3;
-              c.privmsg(self.channel, self.db.random_message());
+              self.random_talk(c);
            elif cmd[0] == "decision":
               self.lunch_decision_topic(c, cmd[1]);
 

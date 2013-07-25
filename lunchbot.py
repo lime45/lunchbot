@@ -150,8 +150,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
         if len(a) > 1 and irc.strings.lower(a[0]) == irc.strings.lower(self.connection.get_nickname()):
             self.do_command(e, a[1].strip())
             command=1;
-        elif re.match(".*time.*",e.arguments[0]):
-           c.privmsg(nick, "Speaking of time, is it lunch time yet?");
         elif e.arguments[0] == e.arguments[0].upper() and e.arguments[0] != e.arguments[0].lower():
            c.privmsg(nick, "Quiet down son. I can hear you just fine");
         if re.match(".*yocto.*",e.arguments[0]):

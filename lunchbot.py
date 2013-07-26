@@ -22,6 +22,8 @@ class sqlite_db:
       self.server.commit();
       curs.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, spoke INTEGER)");
       self.server.commit();
+      curs.execute("CREATE TABLE IF NOT EXISTS quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT)");
+      self.server.commit();
    def add_message(self,msg):
       curs = self.server.cursor();
       str_arr = [(msg)]
@@ -64,6 +66,16 @@ class sqlite_db:
       curs = self.server.cursor();
       curs.execute("SELECT * FROM users");
       return curs.fetchall();
+   def add_quote(self,msg):
+      curs = self.server.cursor();
+      str_arr = [(msg)]
+      curs.execute("INSERT INTO quotes(quote) VALUES (?)",str_arr);
+   def random_quote(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM quotes ORDER BY RANDOM() LIMIT 1");
+      return curs.fetchone()[1];
+
+   
 
 
 class TestBot(irc.bot.SingleServerIRCBot):
@@ -156,6 +168,9 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.privmsg(nick, re.sub("yocto","yacto",e.arguments[0]));
         elif re.match(".*environment.*",e.arguments[0]):
            c.privmsg(nick, re.sub("environment","environmental",e.arguments[0]));
+        if re.match("latonka:.*",e.arguments[0],re.IGNORECASE):
+           quote = re.sub("(?i)latonka:","",e.arguments[0]);
+           self.db.add_quote(quote);
         if e.arguments[0] == "ls":
            command = 1;
            for chname, chobj in self.channels.items():
@@ -249,6 +264,20 @@ class TestBot(irc.bot.SingleServerIRCBot):
            elif cmd[0] == "talk":
               self.talk_count = 3;
               self.random_talk(c);
+           elif cmd[0] == "latonka-talk":
+              original_name = self.connection.get_nickname();
+              choice = randint(0,2);
+              if choice == 0:
+                 new_name = "latonkatron";
+              elif choice == 1:
+                 new_name = "latonk-o-matic";
+              else:
+                 new_name = "latonkadonk";
+              c.nick(new_name);
+              c.privmsg(self.channel,self.db.random_quote());
+              c.nick(original_name);
+           elif cmd[0] == "latonkalog":
+               self.db.add_quote(cmd[1]);
            elif cmd[0] == "decision":
               self.lunch_decision_topic(c, cmd[1]);
 

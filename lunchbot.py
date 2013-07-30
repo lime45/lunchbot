@@ -112,6 +112,16 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def on_part(self, c, e):
         nick = e.target;
         name = re.sub("!.*","",e.source);
+        original_name = self.connection.get_nickname();
+        c.nick(name + "1");
+        choice = randint(0,2);
+        if choice == 0:
+           c.privmsg(self.channel, "I don't like this place anymore.");
+        elif choice == 1:
+           c.privmsg(self.channel, "I hate you guys.");
+        elif choice == 2:
+           c.privmsg(self.channel, "You guy are so mean. I'm leaving.");
+        c.nick(original_name);
         choice = randint(0,2);
         if choice == 0:
            c.privmsg(nick, "And stay out " + name);
@@ -126,12 +136,15 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def on_quit(self,c,e):
        name = re.sub("!.*","",e.source);
        choice = randint(0,2);
+       original_name = self.connection.get_nickname();
+       c.nick(name);
        if choice == 0:
-          c.privmsg(self.channel, "Quitter");
+          c.privmsg(self.channel, "I'm a big quitter. Quit quit quit.");
        elif choice == 1:
-          c.privmsg(self.channel, "Quit quitting");
+          c.privmsg(self.channel, "I hate you guys.");
        elif choice == 2:
-          c.privmsg(self.channel, name + " just left without saying anything. How rude.");
+          c.privmsg(self.channel, "You guy are so mean. I'm leaving.");
+       c.nick(original_name);
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])

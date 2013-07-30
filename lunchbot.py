@@ -33,6 +33,10 @@ class sqlite_db:
       curs = self.server.cursor();
       curs.execute("SELECT * FROM messages ORDER BY RANDOM() LIMIT 1");
       return curs.fetchone()[1];
+   def random_hashtag(self, hashtag):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM messages WHERE message LIKE ? ORDER BY RANDOM() LIMIT 1",[( "%" + hashtag + "%")]);
+      return curs.fetchone();
    def add_place(self,place):
       curs = self.server.cursor();
       curs.execute("SELECT * FROM restaurants WHERE place=?",[(place)]);
@@ -196,6 +200,12 @@ class TestBot(irc.bot.SingleServerIRCBot):
         if re.match(".*talk to me.*",e.arguments[0],re.IGNORECASE):
            command = 1;
            self.talk_count = 5;
+        if re.match(".*#.*",e.arguments[0]):
+           tag = re.sub("^[^#]*","",e.arguments[0]);
+           tag = re.sub(" .*","",tag);
+           response = self.db.random_hashtag(tag);
+           if response:
+              c.privmsg(nick, response[1]);
         if command == 0:
            self.db.add_message(e.arguments[0]);
            self.db.inc_user(e.source.nick);

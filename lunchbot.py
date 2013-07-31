@@ -79,6 +79,55 @@ class sqlite_db:
       curs.execute("SELECT * FROM quotes ORDER BY RANDOM() LIMIT 1");
       return curs.fetchone()[1];
 
+class RemovedBot(irc.bot.SingleServerIRCBot):
+    def __init__(self, channel, nickname, server, port=6667):
+        irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname + "1", nickname + "1")
+        self.original_name = nickname;
+        self.channel = channel
+
+    def on_nicknameinuse(self, c, e):
+        c.nick(c.get_nickname() + "_")
+
+    def on_welcome(self, c, e):
+        c.join(self.channel)
+        c.privmsg(self.channel,"Hey guys. I'm " + c.get_nickname() + ". I'm here to harass " + self.original_name + ".");
+
+    def on_join(self, c, e):
+        nick = e.target;
+        name = re.sub("!.*","",e.source);
+        if name == self.original_name:
+           choice = randint(0,2);
+           if choice == 0:
+              c.privmsg(nick, name + " you've got a lot of nerve showing up here");
+           elif choice == 1:
+              c.privmsg(nick, "Go away!");
+           elif choice == 2:
+              c.privmsg(nick, "I hate you " + name);
+
+    def on_part(self, c, e):
+        nick = e.target;
+        name = re.sub("!.*","",e.source);
+        if name == self.original_name:
+           choice = randint(0,2);
+           if choice == 0:
+              c.privmsg(self.channel, "I thought he would never leave");
+           elif choice == 1:
+              c.privmsg(self.channel, "Good riddence");
+           elif choice == 2: 
+              c.privmsg(self.channel, "And stay out!");
+
+    def on_pubmsg(self, c, e):
+       name = e.source.nick;
+       if name == self.original_name:
+          choice = randint(0,100);
+          if(choice < 10):
+             c.privmsg(self.channel, "Shut up!");
+          elif(choice < 20):
+             c.privmsg(self.channel, "Go Away!");
+          elif(choice < 30):
+             c.privmsg(self.channel, "I hate you!");
+          elif (choice < 40):
+             c.kick(self.channel,name, "I hate that guy");
    
 
 
@@ -90,6 +139,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def __init__(self, channel, nickname, server, database, port=6667):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.channel = channel
+        self.server = server
+
         self.last_nick = "";
         self.last_nick_count = 0;
         self.db = sqlite_db(database);
@@ -196,7 +247,15 @@ class TestBot(irc.bot.SingleServerIRCBot):
               c.privmsg(nick, "Users: " + ", ".join(users))
         if re.match("rm .*",e.arguments[0]):
            command = 1;
-           c.kick(nick,e.arguments[0].split()[1],"'cause " + e.source.nick + " told me to");
+           try:
+              why = e.arguments[0].split(" ",2)[2];
+           except:
+              why = "'cause I hate him";
+           c.kick(nick,e.arguments[0].split()[1],why);
+           self.bot = RemovedBot(self.channel, e.arguments[0].split()[1], self.server);
+           self.bot.start();
+           c.mode(self.channel,"+o " + nick + "1");
+           
         if re.match(".*talk to me.*",e.arguments[0],re.IGNORECASE):
            command = 1;
            self.talk_count = 5;
@@ -315,7 +374,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
           cur_day = datetime.now().strftime("%w");
           cur_time = datetime.now().strftime("%H%M");
           if cur_day != '0' and cur_day != '6':
-             if ('1200' >= cur_time) and (cur_time >= '1115'):
+             if ('1259' >= cur_time) and (cur_time >= '1115'):
                 if called == 0:
                    called=1;
                    irc_con.privmsg(channel,"Looks like it is getting close to lunch time why don't you make some suggestions");

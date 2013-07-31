@@ -252,9 +252,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
            except:
               why = "'cause I hate him";
            c.kick(nick,e.arguments[0].split()[1],why);
-           self.bot = RemovedBot(self.channel, e.arguments[0].split()[1], self.server);
-           self.bot.start();
-           c.mode(self.channel,"+o " + nick + "1");
+           thread.start_new_thread(self.rm_bot,(e.arguments[0].split()[1],));
            
         if re.match(".*talk to me.*",e.arguments[0],re.IGNORECASE):
            command = 1;
@@ -393,6 +391,11 @@ class TestBot(irc.bot.SingleServerIRCBot):
              self.ddate_topic(irc_con);
           prev_day = cur_day;
           time.sleep(60);
+    def rm_bot(self,nick):
+       bot = RemovedBot(self.channel, nick, self.server);
+       bot.start();
+
+
 
 
 def main():

@@ -228,12 +228,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
         if len(a) > 1 and irc.strings.lower(a[0]) == irc.strings.lower(self.connection.get_nickname()):
             self.do_command(e, a[1].strip())
             command=1;
-        elif e.arguments[0] == e.arguments[0].upper() and e.arguments[0] != e.arguments[0].lower():
-           c.privmsg(nick, "Quiet down son. I can hear you just fine");
-        if re.match(".*yocto.*",e.arguments[0]):
-           c.privmsg(nick, re.sub("yocto","yacto",e.arguments[0]));
-        elif re.match(".*environment.*",e.arguments[0]):
-           c.privmsg(nick, re.sub("environment","environmental",e.arguments[0]));
         if re.match("latonka:.*",e.arguments[0],re.IGNORECASE):
            quote = re.sub("(?i)latonka:","",e.arguments[0]);
            self.db.add_quote(quote);

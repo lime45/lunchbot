@@ -86,7 +86,7 @@ class RemovedBot(irc.bot.SingleServerIRCBot):
         self.channel = channel
 
     def on_nicknameinuse(self, c, e):
-        c.nick(c.get_nickname() + "_")
+        print("nick name in use " + c.get_nickname());
 
     def on_welcome(self, c, e):
         c.join(self.channel)
@@ -140,13 +140,13 @@ class TestBot(irc.bot.SingleServerIRCBot):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.channel = channel
         self.server = server
-
+        self.nick = nickname
         self.last_nick = "";
         self.last_nick_count = 0;
         self.db = sqlite_db(database);
 
     def on_nicknameinuse(self, c, e):
-        c.nick(c.get_nickname() + "_")
+        print(c.get_nickname() + " in use")
 
     def on_welcome(self, c, e):
         c.join(self.channel)
@@ -167,7 +167,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def on_part(self, c, e):
         nick = e.target;
         name = re.sub("!.*","",e.source);
-        original_name = self.connection.get_nickname();
         c.nick(name + "1");
         choice = randint(0,2);
         if choice == 0:
@@ -176,7 +175,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.privmsg(self.channel, "I hate you guys.");
         elif choice == 2:
            c.privmsg(self.channel, "You guy are so mean. I'm leaving.");
-        c.nick(original_name);
+        c.nick(self.nick);
         choice = randint(0,2);
         if choice == 0:
            c.privmsg(nick, "And stay out " + name);
@@ -191,7 +190,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def on_quit(self,c,e):
        name = re.sub("!.*","",e.source);
        choice = randint(0,2);
-       original_name = self.connection.get_nickname();
        c.nick(name);
        if choice == 0:
           c.privmsg(self.channel, "I'm a big quitter. Quit quit quit.");
@@ -199,7 +197,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
           c.privmsg(self.channel, "I hate you guys.");
        elif choice == 2:
           c.privmsg(self.channel, "You guy are so mean. I'm leaving.");
-       c.nick(original_name);
+       c.nick(self.nick);
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
@@ -345,7 +343,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
               self.talk_count = 3;
               self.random_talk(c);
            elif cmd[0] == "latonka-talk":
-              original_name = self.connection.get_nickname();
               choice = randint(0,2);
               if choice == 0:
                  new_name = "latonkatron";
@@ -355,7 +352,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                  new_name = "latonkadonk";
               c.nick(new_name);
               c.privmsg(self.channel,self.db.random_quote());
-              c.nick(original_name);
+              c.nick(self.nick);
            elif cmd[0] == "latonkalog":
                self.db.add_quote(cmd[1]);
            elif cmd[0] == "decision":

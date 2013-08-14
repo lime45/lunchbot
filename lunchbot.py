@@ -11,6 +11,17 @@ import re
 import subprocess
 import sqlite3
 
+class player:
+   def __init__(self,user,db,irc_con,channel):
+      self.name = user;
+      self.db = db;
+#      try:
+      self.weapon = db.random_weapon_type() + " " +  db.random_weapon();
+#      except:
+#         self.weapon = "silly thing";
+      self.irc_con = irc_con;
+      self.channel = channel;
+      irc_con.privmsg(self.channel, user + " enters the room and is equipped with a " + self.weapon);
 
 class sqlite_db:
    def __init__(self,filename):
@@ -23,6 +34,10 @@ class sqlite_db:
       curs.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, spoke INTEGER)");
       self.server.commit();
       curs.execute("CREATE TABLE IF NOT EXISTS quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT)");
+      self.server.commit();
+      curs.execute("CREATE TABLE IF NOT EXISTS weapons (id INTEGER PRIMARY KEY AUTOINCREMENT, weapon TEXT)");
+      self.server.commit();
+      curs.execute("CREATE TABLE IF NOT EXISTS weapon_types (id INTEGER PRIMARY KEY AUTOINCREMENT, weapon_type TEXT)");
       self.server.commit();
    def add_message(self,msg):
       curs = self.server.cursor();
@@ -74,10 +89,31 @@ class sqlite_db:
       curs = self.server.cursor();
       str_arr = [(msg)]
       curs.execute("INSERT INTO quotes(quote) VALUES (?)",str_arr);
+      self.server.commit();
    def random_quote(self):
       curs = self.server.cursor();
       curs.execute("SELECT * FROM quotes ORDER BY RANDOM() LIMIT 1");
       return curs.fetchone()[1];
+   def add_weapon(self,msg):
+      curs = self.server.cursor();
+      str_arr = [(msg)]
+      curs.execute("INSERT INTO weapons(weapon) VALUES (?)",str_arr);
+      self.server.commit();
+   def random_weapon(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM weapons ORDER BY RANDOM() LIMIT 1");
+      return curs.fetchone()[1];
+   def add_weapon_type(self,msg):
+      curs = self.server.cursor();
+      str_arr = [(msg)]
+      curs.execute("INSERT INTO weapon_types(weapon_type) VALUES (?)",str_arr);
+      self.server.commit();
+   def random_weapon_type(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM weapon_types ORDER BY RANDOM() LIMIT 1");
+      return curs.fetchone()[1];
+
+
 
 class RemovedBot(irc.bot.SingleServerIRCBot):
     def __init__(self, channel, nickname, server, port=6667):
@@ -137,13 +173,16 @@ class TestBot(irc.bot.SingleServerIRCBot):
     topic = "none";
     talk_count = 0;
     def __init__(self, channel, nickname, server, database, port=6667):
-        irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.channel = channel
         self.server = server
         self.nick = nickname
         self.last_nick = "";
         self.last_nick_count = 0;
         self.db = sqlite_db(database);
+        self.players = [];
+        irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
+
+
 
     def on_nicknameinuse(self, c, e):
         print(c.get_nickname() + " in use")
@@ -153,16 +192,23 @@ class TestBot(irc.bot.SingleServerIRCBot):
         c.privmsg(self.channel,"Hey guys. I'm " + c.get_nickname() + ". I'm here to help you pick somewhere to go for lunch");
         thread.start_new_thread(self.reminder_thread,(c,self.channel));
 
+    def _on_namreply(self, c, e):
+        ch = e.arguments[1]
+        for nick in e.arguments[2].split():
+            self.players.append(player(nick,self.db,c,self.channel));
+
     def on_join(self, c, e):
         nick = e.target;
         name = re.sub("!.*","",e.source);
-        choice = randint(0,2);
-        if choice == 0:
-           c.privmsg(nick, "Fancy seeing you here " + name);
-        elif choice == 1:
-           c.privmsg(nick, "What are you doing here " + name + "?");
-        elif choice == 2:
-           c.privmsg(nick, name + " is just here for the food");
+        if name != self.nick:
+           choice = randint(0,2);
+           if choice == 0:
+              c.privmsg(nick, "Fancy seeing you here " + name);
+           elif choice == 1:
+              c.privmsg(nick, "What are you doing here " + name + "?");
+           elif choice == 2:
+              c.privmsg(nick, name + " is just here for the food");
+           self.players.append(player(name,self.db,c,self.channel));
 
     def on_part(self, c, e):
         nick = e.target;
@@ -186,6 +232,9 @@ class TestBot(irc.bot.SingleServerIRCBot):
         elif choice == 2:
            c.privmsg(nick, name + " just hates me.");
            c.privmsg(name, "Come back to " + nick);
+        for player in self.players:
+           if player.name == name:
+              self.players.remove(player);
 
     def on_quit(self,c,e):
        name = re.sub("!.*","",e.source);
@@ -198,6 +247,9 @@ class TestBot(irc.bot.SingleServerIRCBot):
        elif choice == 2:
           c.privmsg(self.channel, "You guy are so mean. I'm leaving.");
        c.nick(self.nick);
+       for player in self.players:
+          if player.name == name:
+             self.players.remove(player);
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
@@ -364,6 +416,10 @@ class TestBot(irc.bot.SingleServerIRCBot):
               elif choice == 4:
                  c.privmsg(self.channel,"To make a specific command preface it with \"" + self.nick + ":\" or send a private message to " + self.nick);
                  c.privmsg(self.channel,"If that's not enough just look at the source on gitlab.");
+           elif cmd[0] == "weapon":
+              self.db.add_weapon(cmd[1]);
+           elif cmd[0] == "weapon_type":
+              self.db.add_weapon_type(cmd[1]);
            else:
                 c.privmsg(nick, "Whatchu talkin' 'bout Willis? I ain't goin' to " + args)
         except:

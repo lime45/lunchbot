@@ -351,7 +351,19 @@ class TestBot(irc.bot.SingleServerIRCBot):
                self.db.add_quote(cmd[1]);
            elif cmd[0] == "decision":
               self.lunch_decision_topic(c, cmd[1]);
-
+           elif cmd[0] == "help":
+              choice = randint(0,4);
+              if choice == 0:
+                 c.privmsg(self.channel,"meh");
+              elif choice == 1:
+                 c.privmsg(self.channel,"nope");
+              elif choice == 2:
+                 c.privmsg(self.channel,"maybe latter");
+              elif choice == 3:
+                 c.privmsg(self.channel,"just mash the keys that might work");
+              elif choice == 4:
+                 c.privmsg(self.channel,"To make a specific command preface it with \"" + self.nick + ":\" or send a private message to " + self.nick);
+                 c.privmsg(self.channel,"If that's not enough just look at the source on gitlab.");
            else:
                 c.privmsg(nick, "Whatchu talkin' 'bout Willis? I ain't goin' to " + args)
         except:

@@ -13,7 +13,7 @@ import sqlite3
 
 class player:
    def __init__(self,user,db,irc_con,channel):
-      self.name = user;
+      self.name = re.sub("@","",user);
       self.db = db;
 #      try:
       self.weapon = db.random_weapon_type() + " " +  db.random_weapon();
@@ -21,7 +21,7 @@ class player:
 #         self.weapon = "silly thing";
       self.irc_con = irc_con;
       self.channel = channel;
-      irc_con.privmsg(self.channel, user + " enters the room and is equipped with a " + self.weapon);
+      irc_con.privmsg(self.channel, self.name + " enters the room and is equipped with a " + self.weapon);
       self.hp=100;
    def get_weapon(self):
       return self.weapon;

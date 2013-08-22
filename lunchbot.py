@@ -22,6 +22,13 @@ class player:
       self.irc_con = irc_con;
       self.channel = channel;
       irc_con.privmsg(self.channel, user + " enters the room and is equipped with a " + self.weapon);
+      self.hp=100;
+   def get_weapon(self):
+      return self.weapon;
+   def get_health(self):
+      return self.hp;
+   def set_health(self,val):
+      self.hp=val;
 
 class sqlite_db:
    def __init__(self,filename):
@@ -307,6 +314,9 @@ class TestBot(irc.bot.SingleServerIRCBot):
            response = self.db.random_hashtag(tag);
            if response:
               c.privmsg(nick, response[1]);
+        if re.match(">.*",e.arguments[0]):
+           self.do_action(c,e,re.sub(">","",e.arguments[0]));
+           command=1;
         if command == 0:
            self.db.add_message(e.arguments[0]);
            self.db.inc_user(e.source.nick);
@@ -335,6 +345,41 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
     def ddate_topic(self, irc_con):
        irc_con.topic(self.channel,re.sub("\n","",subprocess.check_output(["ddate"])));
+
+    def do_action(self, c, e, args):
+       name = e.source.nick;
+       nick = e.target
+       if nick == self.connection.get_nickname() :
+          nick = e.source.nick;
+       if(re.match(" *inventory",args,re.IGNORECASE)):
+          weapon = "nothing";
+          for player in self.players:
+             if player.name == name:
+                weapon = player.get_weapon();
+          c.privmsg(nick, name + " is equipped with a " + weapon);
+       if(re.match(" *health",args,re.IGNORECASE)):
+          health = 0;
+          for player in self.players:
+             if player.name == name:
+                health = player.get_health();
+          c.privmsg(nick, name + " has " + str(health) + " hp");
+       if(re.match(" *attack .*",args, re.IGNORECASE)):
+          targets = args.split(" ");
+          for player in self.players:
+             if player.name == name:
+                source_player = player;
+          for target in targets:
+             for player in self.players:
+                if target == player.name:
+                   damage = randint(0,10) - 3;
+                   if damage >= 0:
+                      health = player.get_health();
+                      player.set_health(health - damage);
+                      c.privmsg(self.channel,source_player.name + " attacks " + target + " with their " + source_player.get_weapon() + " for " + str(damage) + " damage");
+                      c.privmsg(self.channel, target + " is now at " + str(player.get_health()) + " hp");
+                   else:
+                      source_player.set_health(source_player.get_health() + damage);
+                      c.privmsg(self.channel, source_player.name + " accidenetally attacks themselves with " + source_player.get_weapon() + " and is now at " + str(source_player.get_health()) + " hp.");
 
     def do_command(self, e, args):
         nick = e.target

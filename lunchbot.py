@@ -379,7 +379,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                       c.privmsg(self.channel, target + " is now at " + str(player.get_health()) + " hp");
                    else:
                       source_player.set_health(source_player.get_health() + damage);
-                      c.privmsg(self.channel, source_player.name + " accidenetally attacks themselves with " + source_player.get_weapon() + " and is now at " + str(source_player.get_health()) + " hp.");
+                      c.privmsg(self.channel, source_player.name + " accidentally attacks themselves with " + source_player.get_weapon() + " and is now at " + str(source_player.get_health()) + " hp.");
 
     def do_command(self, e, args):
         nick = e.target

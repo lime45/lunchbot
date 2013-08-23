@@ -461,7 +461,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
           for player in self.players:
              if player.name == name:
                 weapon = player.get_weapon();
-          if (weapon.startswith('a','e','i','o','u','A','E','I','O','U')):
+          if (weapon.startswith(('a','e','i','o','u','A','E','I','O','U'))):
              c.privmsg(nick, name + " is equipped with an " + weapon);
           else:
              c.privmsg(nick, name + " is equipped with a " + weapon);

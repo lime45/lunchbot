@@ -4,6 +4,7 @@ import irc.bot
 import irc.strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 from random import randint
+from random import choice
 import thread
 from datetime import datetime
 import time
@@ -21,17 +22,58 @@ class player:
 #         self.weapon = "silly thing";
       self.irc_con = irc_con;
       self.channel = channel;
-      if (self.weapon.startswith('a','e','i','o','u','A','E','I','O','U')):
-         c.privmsg(nick, name + " is equipped with an " + self.weapon);
+      if (self.weapon.startswith(('a','e','i','o','u','A','E','I','O','U'))):
+         self.irc_con.privmsg(self.channel, self.name + " is equipped with an " + self.weapon);
       else:
-         c.privmsg(nick, name + " is equipped with a " + self.weapon);
+         self.irc_con.privmsg(self.channel, self.name + " is equipped with a " + self.weapon);
       self.hp=100;
+      self.location_set = 0;
    def get_weapon(self):
       return self.weapon;
    def get_health(self):
       return self.hp;
    def set_health(self,val):
       self.hp=val;
+
+class location:
+   def __init__(self,db,name,index):
+      self.name = name;
+      self.items = [];
+      count = randint(1,5);
+      for i in range(count):
+         self.items.append(db.random_weapon_type() + " " + db.random_weapon());
+      self.north_index = -1;
+      self.south_index = -1;
+      self.east_index = -1;
+      self.west_index = -1;
+      self.index = index;
+      self.people = [];
+   def connect(self,direction,name):
+      print(name.name + " add to the " + direction + " of " + self.name);
+      if(direction == "n"):
+         self.north = name;
+         self.north_index = name.index;
+      elif(direction == "s"):
+         self.south = name;
+         self.south_index = name.index;
+      elif(direction == "e"):
+         self.east = name;
+         self.east_index = name.index;
+      elif(direction == "w"):
+         self.west = name;
+         self.west_index = name.index;
+   def add_item(self,name):
+      self.items.append(name);
+   def remove_item(self,name):
+      for item in self.items:
+         if item == name:
+            self.items.remove(item);
+            return;
+   def add_person(self,person):
+      self.people.append(person);
+   def remove_person(self,person):
+      self.people.remove(person);
+
 
 class sqlite_db:
    def __init__(self,filename):
@@ -48,6 +90,8 @@ class sqlite_db:
       curs.execute("CREATE TABLE IF NOT EXISTS weapons (id INTEGER PRIMARY KEY AUTOINCREMENT, weapon TEXT)");
       self.server.commit();
       curs.execute("CREATE TABLE IF NOT EXISTS weapon_types (id INTEGER PRIMARY KEY AUTOINCREMENT, weapon_type TEXT)");
+      self.server.commit();
+      curs.execute("CREATE TABLE IF NOT EXISTS rooms (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
       self.server.commit();
    def add_message(self,msg):
       curs = self.server.cursor();
@@ -122,6 +166,15 @@ class sqlite_db:
       curs = self.server.cursor();
       curs.execute("SELECT * FROM weapon_types ORDER BY RANDOM() LIMIT 1");
       return curs.fetchone()[1];
+   def add_room(self,room):
+      curs = self.server.cursor();
+      str_arr = [(room)];
+      curs.execute("INSERT INTO rooms(name) VALUES (?)",str_arr);
+      self.server.commit();
+   def random_room(self):
+      curs = self.server.cursor();
+      curs.execute("SELECT * FROM rooms ORDER BY RANDOM() LIMIT 1");
+      return curs.fetchone()[1];
 
 
 
@@ -191,8 +244,49 @@ class TestBot(irc.bot.SingleServerIRCBot):
         self.db = sqlite_db(database);
         self.players = [];
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
+        self.rooms_init = 0;
 
+    def init_rooms(self):
+       self.rooms = [];
+       room = location(self.db,"Innovation Lounge",0);
+       index = 1;
+       depth = 0;
+       if randint(0,1) != 0:
+          index =  self.add_room(room,"n",index,depth);
+       if randint(0,1) != 0:
+          index =  self.add_room(room,"s",index,depth);
+       if randint(0,1) != 0:
+          index =  self.add_room(room,"e",index,depth);
+       if randint(0,1) != 0:
+          index =  self.add_room(room,"w",index,depth);
+       self.rooms.append(room);
 
+    def add_room(self, parent, parent_direction, index, depth):
+      if depth == 3:
+         return index;
+      room = location(self.db,choice(self.players).name + "'s " + self.db.random_room(),index);
+      if parent_direction == "n":
+         child_direction = "s";
+      if parent_direction == "s":
+         child_direction = "n";
+      if parent_direction == "e":
+         child_direction = "w";
+      if parent_direction == "w":
+         child_direction = "e";
+      parent.connect(parent_direction,room);
+      room.connect(child_direction,parent);
+      index += 1;
+      depth += 1;
+      if randint(0,1) != 0:
+         index =  self.add_room(room,"n",index,depth);
+      if randint(0,1) != 0:
+         index =  self.add_room(room,"s",index,depth);
+      if randint(0,1) != 0:
+         index =  self.add_room(room,"e",index,depth);
+      if randint(0,1) != 0:
+         index =  self.add_room(room,"w",index,depth);
+      self.rooms.append(room);
+      return index;
 
     def on_nicknameinuse(self, c, e):
         print(c.get_nickname() + " in use")
@@ -206,6 +300,14 @@ class TestBot(irc.bot.SingleServerIRCBot):
         ch = e.arguments[1]
         for nick in e.arguments[2].split():
             self.players.append(player(nick,self.db,c,self.channel));
+        if self.rooms_init != 1:
+           self.rooms_init = 1;
+           self.init_rooms();
+        for _player in self.players:
+           if _player.location_set == 0:
+              _player.location = self.rooms[0];
+              _player.location_set = 1;
+              self.rooms[0].add_person(_player);
 
     def on_join(self, c, e):
         nick = e.target;
@@ -386,6 +488,86 @@ class TestBot(irc.bot.SingleServerIRCBot):
                    else:
                       source_player.set_health(source_player.get_health() + damage);
                       c.privmsg(self.channel, source_player.name + " accidentally attacks themselves with " + source_player.get_weapon() + " and is now at " + str(source_player.get_health()) + " hp.");
+       if(re.match(" *where .*",args, re.IGNORECASE)):
+          match = 0;
+          msg = "were you looking for someone?";
+          for player in self.players:
+             if player.name == name:
+                msg = "you are in " + player.location.name;
+             if(re.match(".* " + player.name + ".*", args)):
+                c.privmsg(self.channel, player.name + " is in " + player.location.name);
+                match = 1;
+          if match == 0:
+             c.privmsg(self.channel,msg);
+       if(re.match(" *go .*",args, re.IGNORECASE)):
+          directions = args.split(" ");
+          for player in self.players:
+             if player.name == name:
+                for direction in directions:
+                   if direction == "n" or direction == "north":
+                      if player.location.north_index == -1:
+                         c.privmsg(self.channel,"There is nothing to the north");
+                      else:
+                         new_location = player.location.north;
+                         player.location.remove_person(player);
+                         player.location = new_location;
+                         player.location.add_person(player);
+                   if direction == "s" or direction == "south":
+                      if player.location.south_index == -1:
+                         c.privmsg(self.channel,"There is nothing to the south");
+                      else:
+                         new_location = player.location.south;
+                         player.location.remove_person(player);
+                         player.location = new_location;
+                         player.location.add_person(player);
+                   if direction == "e" or direction == "east":
+                      if player.location.east_index == -1:
+                         c.privmsg(self.channel,"There is nothing to the east");
+                      else:
+                         new_location = player.location.east;
+                         player.location.remove_person(player);
+                         player.location = new_location;
+                         player.location.add_person(player);
+                   if direction == "w" or direction == "west":
+                      if player.location.west_index == -1:
+                         c.privmsg(self.channel,"There is nothing to the west");
+                      else:
+                         new_location = player.location.west;
+                         print("setting new_location" + new_location.name);
+                         player.location.remove_person(player);
+                         player.location = new_location;
+                         player.location.add_person(player);
+          try:
+             c.privmsg(self.channel,"you are now in " + new_location.name);
+          except:
+             c.privmsg(self.channel,"I don't know where you were trying to go");
+       if(re.match(" *look .*",args, re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                location = player.location;
+          try:
+             name = "";
+             for person in location.people:
+                name = name + " " + person.name;
+             things = "";
+             for item in location.items:
+                things = things + " " + item;
+             c.privmsg(self.channel, "You are in " + player.location.name + " with " + name + " and the room contains " + things);
+             exits = "";
+             if(location.north_index != -1):
+                exits = exits + "To the north is " + location.north.name + ". ";
+             if(location.south_index != -1):
+                exits = exits + "To the south is " + location.south.name + ". ";
+             if(location.east_index != -1):
+                exits = exits + "To the east is " + location.east.name + ". ";
+             if(location.west_index != -1):
+                exits = exits + "To the west is " + location.west.name + ". ";
+             c.privmsg(self.channel, exits);
+          except:
+             c.privmsg(self.channel, "I have no idea where you are or who you are.");
+
+
+
 
     def do_command(self, e, args):
         nick = e.target

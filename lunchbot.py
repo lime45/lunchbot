@@ -277,13 +277,13 @@ class TestBot(irc.bot.SingleServerIRCBot):
       room.connect(child_direction,parent);
       index += 1;
       depth += 1;
-      if randint(0,1) != 0:
+      if randint(0,1) != 0 and child_direction != "n":
          index =  self.add_room(room,"n",index,depth);
-      if randint(0,1) != 0:
+      if randint(0,1) != 0 and child_direction != "s":
          index =  self.add_room(room,"s",index,depth);
-      if randint(0,1) != 0:
+      if randint(0,1) != 0 and child_direction != "e":
          index =  self.add_room(room,"e",index,depth);
-      if randint(0,1) != 0:
+      if randint(0,1) != 0 and child_direction != "w":
          index =  self.add_room(room,"w",index,depth);
       self.rooms.append(room);
       return index;
@@ -491,12 +491,15 @@ class TestBot(irc.bot.SingleServerIRCBot):
        if(re.match(" *where .*",args, re.IGNORECASE)):
           match = 0;
           msg = "were you looking for someone?";
-          for player in self.players:
-             if player.name == name:
-                msg = "you are in " + player.location.name;
-             if(re.match(".* " + player.name + ".*", args)):
-                c.privmsg(self.channel, player.name + " is in " + player.location.name);
-                match = 1;
+          try:
+             for player in self.players:
+                if player.name == name:
+                   msg = "you are in " + player.location.name;
+                if(re.match(".* " + player.name + ".*", args)):
+                   c.privmsg(self.channel, player.name + " is in " + player.location.name);
+                   match = 1;
+          except:
+             msg = "no idea";
           if match == 0:
              c.privmsg(self.channel,msg);
        if(re.match(" *go .*",args, re.IGNORECASE)):

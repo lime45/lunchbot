@@ -320,7 +320,11 @@ class TestBot(irc.bot.SingleServerIRCBot):
               c.privmsg(nick, "What are you doing here " + name + "?");
            elif choice == 2:
               c.privmsg(nick, name + " is just here for the food");
-           self.players.append(player(name,self.db,c,self.channel));
+           _player = player(name,self.db,c,self.channel);
+           self.players.append(_player);
+           _player.location = self.rooms[0];
+           _player.location_set = 1;
+           self.rooms[0].add_person(_player);
 
     def on_part(self, c, e):
         nick = e.target;
@@ -346,6 +350,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
            c.privmsg(name, "Come back to " + nick);
         for player in self.players:
            if player.name == name:
+              player.location.remove_person(player);
               self.players.remove(player);
 
     def on_quit(self,c,e):
@@ -361,6 +366,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
        c.nick(self.nick);
        for player in self.players:
           if player.name == name:
+             player.location.remove_person(player);
              self.players.remove(player);
 
     def on_privmsg(self, c, e):
@@ -471,7 +477,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
              if player.name == name:
                 health = player.get_health();
           c.privmsg(nick, name + " has " + str(health) + " hp");
-       if(re.match(" *attack .*",args, re.IGNORECASE)):
+       if(re.match(" *attack.*",args, re.IGNORECASE)):
           targets = args.split(" ");
           for player in self.players:
              if player.name == name:
@@ -488,7 +494,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                    else:
                       source_player.set_health(source_player.get_health() + damage);
                       c.privmsg(self.channel, source_player.name + " accidentally attacks themselves with " + source_player.get_weapon() + " and is now at " + str(source_player.get_health()) + " hp.");
-       if(re.match(" *where .*",args, re.IGNORECASE)):
+       if(re.match(" *where.*",args, re.IGNORECASE)):
           match = 0;
           msg = "were you looking for someone?";
           try:
@@ -502,7 +508,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
              msg = "no idea";
           if match == 0:
              c.privmsg(self.channel,msg);
-       if(re.match(" *go .*",args, re.IGNORECASE)):
+       if(re.match(" *go.*",args, re.IGNORECASE)):
           directions = args.split(" ");
           for player in self.players:
              if player.name == name:
@@ -544,11 +550,12 @@ class TestBot(irc.bot.SingleServerIRCBot):
              c.privmsg(self.channel,"you are now in " + new_location.name);
           except:
              c.privmsg(self.channel,"I don't know where you were trying to go");
-       if(re.match(" *look .*",args, re.IGNORECASE)):
+       if(re.match(" *look.*",args, re.IGNORECASE)):
           for player in self.players:
              if player.name == name:
                 location = player.location;
-          try:
+          if 1==1:
+#          try:
              name = "";
              for person in location.people:
                 name = name + " " + person.name;
@@ -566,8 +573,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
              if(location.west_index != -1):
                 exits = exits + "To the west is " + location.west.name + ". ";
              c.privmsg(self.channel, exits);
-          except:
-             c.privmsg(self.channel, "I have no idea where you are or who you are.");
+#          except:
+#             c.privmsg(self.channel, "I have no idea where you are or who you are.");
 
 
 

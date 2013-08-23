@@ -21,7 +21,10 @@ class player:
 #         self.weapon = "silly thing";
       self.irc_con = irc_con;
       self.channel = channel;
-      irc_con.privmsg(self.channel, self.name + " enters the room and is equipped with a " + self.weapon);
+      if (self.weapon.startswith('a','e','i','o','u','A','E','I','O','U')):
+         c.privmsg(nick, name + " is equipped with an " + self.weapon);
+      else:
+         c.privmsg(nick, name + " is equipped with a " + self.weapon);
       self.hp=100;
    def get_weapon(self):
       return self.weapon;
@@ -356,7 +359,10 @@ class TestBot(irc.bot.SingleServerIRCBot):
           for player in self.players:
              if player.name == name:
                 weapon = player.get_weapon();
-          c.privmsg(nick, name + " is equipped with a " + weapon);
+          if (weapon.startswith('a','e','i','o','u','A','E','I','O','U')):
+             c.privmsg(nick, name + " is equipped with an " + weapon);
+          else:
+             c.privmsg(nick, name + " is equipped with a " + weapon);
        if(re.match(" *health",args,re.IGNORECASE)):
           health = 0;
           for player in self.players:

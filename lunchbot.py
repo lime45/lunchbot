@@ -562,7 +562,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
              things = "";
              for item in location.items:
                 things = things + " " + item;
-             c.privmsg(self.channel, "You are in " + player.location.name + " with " + name + " and the room contains " + things);
+             c.privmsg(self.channel, "You are in " + location.name + " with " + name + " and the room contains " + things);
              exits = "";
              if(location.north_index != -1):
                 exits = exits + "To the north is " + location.north.name + ". ";

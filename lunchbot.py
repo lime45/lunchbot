@@ -36,7 +36,7 @@ class player:
       self.hp=val;
 
 class location:
-   def __init__(self,db,name,index):
+   def __init__(self,db,name,index, x, y):
       self.name = name;
       self.items = [];
       count = randint(1,5);
@@ -48,6 +48,8 @@ class location:
       self.west_index = -1;
       self.index = index;
       self.people = [];
+      self.x=x;
+      self.y=y;
    def connect(self,direction,name):
       print(name.name + " add to the " + direction + " of " + self.name);
       if(direction == "n"):
@@ -248,23 +250,29 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
     def init_rooms(self):
        self.rooms = [];
-       room = location(self.db,"Innovation Lounge",0);
+       room = location(self.db,"Innovation Lounge",0,0,0);
+       self.rooms.append(room);
        index = 1;
        depth = 0;
-       if randint(0,1) != 0:
-          index =  self.add_room(room,"n",index,depth);
-       if randint(0,1) != 0:
-          index =  self.add_room(room,"s",index,depth);
-       if randint(0,1) != 0:
-          index =  self.add_room(room,"e",index,depth);
-       if randint(0,1) != 0:
-          index =  self.add_room(room,"w",index,depth);
-       self.rooms.append(room);
+       if randint(0,3) != 0:
+          index =  self.add_room(room,"n",index,depth,0,1);
+       if randint(0,3) != 0:
+          index =  self.add_room(room,"s",index,depth,0,-1);
+       if randint(0,3) != 0:
+          index =  self.add_room(room,"e",index,depth,1,0);
+       if randint(0,3) != 0:
+          index =  self.add_room(room,"w",index,depth,-1,0);
+    def find_room(self,x,y):
+       for room in self.rooms:
+          if room.x == x and room.y == y:
+             return room;
+       return None;
 
-    def add_room(self, parent, parent_direction, index, depth):
+    def add_room(self, parent, parent_direction, index, depth,x,y):
       if depth == 3:
          return index;
-      room = location(self.db,choice(self.players).name + "'s " + self.db.random_room(),index);
+      room = location(self.db,choice(self.players).name + "'s " + self.db.random_room(),index,x,y);
+      self.rooms.append(room);
       if parent_direction == "n":
          child_direction = "s";
       if parent_direction == "s":
@@ -277,15 +285,34 @@ class TestBot(irc.bot.SingleServerIRCBot):
       room.connect(child_direction,parent);
       index += 1;
       depth += 1;
-      if randint(0,1) != 0 and child_direction != "n":
-         index =  self.add_room(room,"n",index,depth);
-      if randint(0,1) != 0 and child_direction != "s":
-         index =  self.add_room(room,"s",index,depth);
-      if randint(0,1) != 0 and child_direction != "e":
-         index =  self.add_room(room,"e",index,depth);
-      if randint(0,1) != 0 and child_direction != "w":
-         index =  self.add_room(room,"w",index,depth);
-      self.rooms.append(room);
+      if randint(0,3) != 0 and child_direction != "n":
+         adjacent_room = self.find_room(x,y+1);
+         if adjacent_room is None:
+            index =  self.add_room(room,"n",index,depth,x,y+1);
+         else:
+            adjacent_room.connect("s", room);
+            room.connect("n",adjacent_room);
+      if randint(0,3) != 0 and child_direction != "s":
+         adjacent_room = self.find_room(x,y-1);
+         if adjacent_room is None:
+            index =  self.add_room(room,"s",index,depth,x,y-1);
+         else:
+            adjacent_room.connect("n", room);
+            room.connect("s",adjacent_room);
+      if randint(0,3) != 0 and child_direction != "e":
+         adjacent_room = self.find_room(x+1,y);
+         if adjacent_room is None:
+            index =  self.add_room(room,"e",index,depth,x+1,y);
+         else:
+            adjacent_room.connect("w", room);
+            room.connect("e",adjacent_room);
+      if randint(0,3) != 0 and child_direction != "w":
+         adjacent_room = self.find_room(x-1,y);
+         if adjacent_room is None:
+            index =  self.add_room(room,"w",index,depth,x-1,y);
+         else:
+            adjacent_room.connect("e", room);
+            room.connect("w",adjacent_room);
       return index;
 
     def on_nicknameinuse(self, c, e):

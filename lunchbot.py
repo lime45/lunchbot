@@ -510,7 +510,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
              if player.name == name:
                 source_player = player;
           for target in targets:
-             for player in self.players:
+             for player in source_player.location.people:
                 if target == player.name:
                    damage = randint(0,10) - 3;
                    if damage >= 0:

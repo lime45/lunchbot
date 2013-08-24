@@ -594,12 +594,22 @@ class TestBot(irc.bot.SingleServerIRCBot):
           if 1==1:
 #          try:
              name = "";
+             first = 1;
              for person in location.people:
+                if first == 1:
+                   first = 0;
+                else:
+                   name = name + ",";
                 name = name + " " + person.name;
              things = "";
+             first = 1;
              for item in location.items:
+                if first == 1:
+                   first = 0;
+                else:
+                   things = things + ",";
                 things = things + " " + item;
-             c.privmsg(self.channel, "You are in " + location.name + " with " + name + " and the room contains " + things);
+             c.privmsg(self.channel, "You are in " + location.name + " with" + name + " and the room contains" + things);
              exits = "";
              if(location.north_index != -1):
                 exits = exits + "To the north is " + location.north.name + ". ";

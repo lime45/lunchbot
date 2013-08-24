@@ -535,6 +535,16 @@ class TestBot(irc.bot.SingleServerIRCBot):
              msg = "no idea";
           if match == 0:
              c.privmsg(self.channel,msg);
+       if(re.match(" *take.*",args,re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                for item in player.location.items:
+                   if re.match(".*" + item + ".*",args,re.IGNORECASE):
+                      old_weapon = player.weapon;
+                      player.weapon = item;
+                      player.location.items.remove(item);
+                      player.location.items.append(old_weapon);
+                      c.privmsg(self.channel, name + " dropped " + old_weapon + " and picked up " + item);
        if(re.match(" *go.*",args, re.IGNORECASE)):
           directions = args.split(" ");
           for player in self.players:

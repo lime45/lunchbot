@@ -271,7 +271,13 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def add_room(self, parent, parent_direction, index, depth,x,y):
       if depth == 3:
          return index;
-      room = location(self.db,choice(self.players).name + "'s " + self.db.random_room(),index,x,y);
+      room_name = self.db,choice(self.players).name + "'s " + self.db.random_room();
+      if randint(0,3) == 1:
+         try:
+            room_name = self.db.random_place();
+         except:
+            print("no places recorded");
+      room = location(room_name,index,x,y);
       self.rooms.append(room);
       if parent_direction == "n":
          child_direction = "s";

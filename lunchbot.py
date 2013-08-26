@@ -732,6 +732,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
               self.db.add_weapon(cmd[1]);
            elif cmd[0] == "weapon_type":
               self.db.add_weapon_type(cmd[1]);
+           elif re.match(" *>.*",args):
+              self.do_action(self,c,e,args);
            else:
                 c.privmsg(nick, "Whatchu talkin' 'bout Willis? I ain't goin' to " + args)
         except:

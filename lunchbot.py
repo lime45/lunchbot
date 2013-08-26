@@ -327,6 +327,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         c.join(self.channel)
         c.privmsg(self.channel,"Hey guys. I'm " + c.get_nickname() + ". I'm here to help you pick somewhere to go for lunch");
         thread.start_new_thread(self.reminder_thread,(c,self.channel));
+        self.do_heal();
 
     def _on_namreply(self, c, e):
         ch = e.arguments[1]
@@ -628,7 +629,14 @@ class TestBot(irc.bot.SingleServerIRCBot):
 #          except:
 #             c.privmsg(self.channel, "I have no idea where you are or who you are.");
 
-
+    def do_heal(self):
+       for player in self.players:
+          if player.health < 100:
+             player.health = player.health + 5;
+             if player.health > 100:
+                player.health = 100;
+       t = Timer(3600,self.do__heal,self);
+                
 
 
     def do_command(self, e, args):

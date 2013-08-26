@@ -246,6 +246,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         self.players = [];
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.rooms_init = 0;
+        self.it = "";
 
     def init_rooms(self):
        self.rooms = [];
@@ -628,6 +629,14 @@ class TestBot(irc.bot.SingleServerIRCBot):
              c.privmsg(self.channel, exits);
 #          except:
 #             c.privmsg(self.channel, "I have no idea where you are or who you are.");
+       if(re.match(" *tag .*",args, re.IGNORECASE)):
+          if(self.it == "" or self.it == name):
+             for player in self.players:
+                if re.match(".*" + player.name + ".*",args):
+                   self.it = player.name;
+                   c.privmsg(self.channel, self.it + " is IT");
+                   return;
+
 
     def do_heal(self):
        for player in self.players:

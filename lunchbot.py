@@ -51,7 +51,6 @@ class location:
       self.x=x;
       self.y=y;
    def connect(self,direction,name):
-      print(name.name + " add to the " + direction + " of " + self.name);
       if(direction == "n"):
          self.north = name;
          self.north_index = name.index;
@@ -271,13 +270,13 @@ class TestBot(irc.bot.SingleServerIRCBot):
     def add_room(self, parent, parent_direction, index, depth,x,y):
       if depth == 3:
          return index;
-      room_name = self.db,choice(self.players).name + "'s " + self.db.random_room();
+      room_name = choice(self.players).name + "'s " + self.db.random_room();
       if randint(0,3) == 1:
          try:
             room_name = self.db.random_place();
          except:
             print("no places recorded");
-      room = location(room_name,index,x,y);
+      room = location(self.db,room_name,index,x,y);
       self.rooms.append(room);
       if parent_direction == "n":
          child_direction = "s";

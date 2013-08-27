@@ -13,7 +13,7 @@ import subprocess
 import sqlite3
 
 class player:
-   def __init__(self,user,db,irc_con,channel):
+   def __init__(self,user,db,irc_con,channel, silent):
       self.name = re.sub("@","",user);
       self.db = db;
 #      try:
@@ -22,12 +22,13 @@ class player:
 #         self.weapon = "silly thing";
       self.irc_con = irc_con;
       self.channel = channel;
-      if (self.weapon.startswith(('a','e','i','o','u','A','E','I','O','U'))):
-         self.irc_con.privmsg(self.channel, self.name + " is equipped with an " + self.weapon);
-      else:
-         self.irc_con.privmsg(self.channel, self.name + " is equipped with a " + self.weapon);
-      self.hp=100;
-      self.location_set = 0;
+      if(silent == 0):
+         if (self.weapon.startswith(('a','e','i','o','u','A','E','I','O','U'))):
+            self.irc_con.privmsg(self.channel, self.name + " is equipped with an " + self.weapon);
+         else:
+            self.irc_con.privmsg(self.channel, self.name + " is equipped with a " + self.weapon);
+         self.hp=100;
+         self.location_set = 0;
    def get_weapon(self):
       return self.weapon;
    def get_health(self):
@@ -326,14 +327,13 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
     def on_welcome(self, c, e):
         c.join(self.channel)
-        c.privmsg(self.channel,"Hey guys. I'm " + c.get_nickname() + ". I'm here to help you pick somewhere to go for lunch");
         thread.start_new_thread(self.reminder_thread,(c,self.channel));
         self.do_heal();
 
     def _on_namreply(self, c, e):
         ch = e.arguments[1]
         for nick in e.arguments[2].split():
-            self.players.append(player(nick,self.db,c,self.channel));
+            self.players.append(player(nick,self.db,c,self.channel,1));
         if self.rooms_init != 1:
            self.rooms_init = 1;
            self.init_rooms();
@@ -354,7 +354,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
               c.privmsg(nick, "What are you doing here " + name + "?");
            elif choice == 2:
               c.privmsg(nick, name + " is just here for the food");
-           _player = player(name,self.db,c,self.channel);
+           _player = player(name,self.db,c,self.channel,0);
            self.players.append(_player);
            _player.location = self.rooms[0];
            _player.location_set = 1;

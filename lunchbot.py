@@ -28,8 +28,8 @@ class player:
             self.irc_con.privmsg(self.channel, self.name + " is equipped with an " + self.weapon);
          else:
             self.irc_con.privmsg(self.channel, self.name + " is equipped with a " + self.weapon);
-         self.hp=100;
-         self.location_set = 0;
+      self.hp=100;
+      self.location_set = 0;
    def get_weapon(self):
       return self.weapon;
    def get_health(self):

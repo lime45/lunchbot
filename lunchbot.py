@@ -205,7 +205,6 @@ class RemovedBot(irc.bot.SingleServerIRCBot):
               c.privmsg(nick, "Go away!");
            elif choice == 2:
               c.privmsg(nick, "I hate you " + name);
-
     def on_part(self, c, e):
         nick = e.target;
         name = re.sub("!.*","",e.source);
@@ -360,6 +359,12 @@ class TestBot(irc.bot.SingleServerIRCBot):
            _player.location = self.rooms[0];
            _player.location_set = 1;
            self.rooms[0].add_person(_player);
+
+    def on_nick(self,c,e):
+       name = re.sub("!.*","",e.source);
+       for player in self.players:
+          if player.name == name:
+             player.name = e.target;
 
     def on_part(self, c, e):
         nick = e.target;

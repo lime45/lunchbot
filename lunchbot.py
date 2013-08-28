@@ -6,6 +6,7 @@ from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 from random import randint
 from random import choice
 import thread
+from threading import Timer
 from datetime import datetime
 import time
 import re
@@ -644,7 +645,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
              player.health = player.health + 5;
              if player.health > 100:
                 player.health = 100;
-       t = Timer(3600,self.do__heal,self);
+       t = Timer(3600,self.do_heal,self);
                 
 
 

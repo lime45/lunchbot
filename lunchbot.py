@@ -646,10 +646,10 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
     def do_heal(self):
        for player in self.players:
-          if player.health < 100:
-             player.health = player.health + 5;
-             if player.health > 100:
-                player.health = 100;
+          if player.get_health() < 100:
+             player.set_health (player.get_health() + 5);
+             if player.get_health() > 100:
+                player.set_health(100);
        t = Timer(3600,self.do_heal,self);
                 
 

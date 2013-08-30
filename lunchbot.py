@@ -289,12 +289,13 @@ class web_socket:
                      first_item = 0;
                   else:
                      room_str = room_str + ",\n";
-                  room_str = room_str + "\"" + item + "\"";
+                  room_str = room_str + "\"" + re.sub("\"","\\\"",item) + "\"";
                room_str = room_str + "\n]\n";
                room_str = room_str + "}";
             room_str = room_str + "\n]\n}";
+            print (room_str);
 
-            connection.sendall(room_str);
+            connection.sendall(room_str.encode('ascii', 'ignore'));
             connection.close();
             return;
 

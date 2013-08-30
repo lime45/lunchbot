@@ -12,6 +12,9 @@ import time
 import re
 import subprocess
 import sqlite3
+import socket
+import os
+import stat
 
 class player:
    def __init__(self,user,db,irc_con,channel, silent):
@@ -230,6 +233,70 @@ class RemovedBot(irc.bot.SingleServerIRCBot):
           elif (choice < 40):
              c.kick(self.channel,name, "I hate that guy");
    
+class web_socket:
+   def __init__(self,bot):
+      self.sock = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);
+      self.addr = "/tmp/" + bot.channel;
+      try:
+         os.unlink(self.addr);
+      except:
+         if os.path.exists(self.addr):
+            raise
+      self.sock.bind(self.addr);
+      os.chmod(self.addr,stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO);
+      self.bot = bot;
+      thread.start_new_thread(self.accept_loop,());
+   def accept_loop(self):
+      self.sock.listen(1);
+      while True:
+         connection, addr = self.sock.accept();
+         thread.start_new_thread(self.handle_connection,(connection,addr));
+   def handle_connection(self,connection,addr):
+      while True:
+         command = connection.recv(32);
+         if(command == "locations"):
+            room_str = "{\n\"rooms\":[\n";
+            first_room = 1;
+            for room in self.bot.rooms:
+               if first_room == 1:
+                  first_room = 0;
+               else:
+                  room_str = room_str + ",\n";
+               room_str = room_str + "{\n";
+               room_str = room_str + "\"name\": \"" + room.name + "\",\n";
+               room_str = room_str + "\"x\": \"" + str(room.x) + "\",\n";
+               room_str = room_str + "\"y\": \"" + str(room.y) + "\",\n";
+
+               room_str = room_str + "\"index\": \"" + str(room.index) + "\",\n";
+               room_str = room_str + "\"north_index\": \"" + str(room.north_index) + "\",\n";
+               room_str = room_str + "\"south_index\": \"" + str(room.south_index) + "\",\n";
+               room_str = room_str + "\"east_index\": \"" + str(room.east_index) + "\",\n";
+               room_str = room_str + "\"west_index\": \"" + str(room.west_index) + "\",\n";
+
+               room_str = room_str + "\"people\": [\n";
+               first_player=1;
+               for player in room.people:
+                  if first_player == 1:
+                     first_player = 0;
+                  else:
+                     room_str = room_str + ",\n";
+                  room_str = room_str + "\"" + player.name + "\"";
+               room_str = room_str + "\n],\n";
+               room_str = room_str + "\"objects\": [\n";
+               first_item = 1;
+               for item in room.items:
+                  if first_item == 1:
+                     first_item = 0;
+                  else:
+                     room_str = room_str + ",\n";
+                  room_str = room_str + "\"" + item + "\"";
+               room_str = room_str + "\n]\n";
+               room_str = room_str + "}";
+            room_str = room_str + "\n]\n}";
+
+            connection.sendall(room_str);
+            connection.close();
+            return;
 
 
 class TestBot(irc.bot.SingleServerIRCBot):
@@ -248,6 +315,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
         self.rooms_init = 0;
         self.it = "";
+        self.web_socket = web_socket(self);
 
     def init_rooms(self):
        self.rooms = [];

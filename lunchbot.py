@@ -357,29 +357,29 @@ class TestBot(irc.bot.SingleServerIRCBot):
       room.connect(child_direction,parent);
       index += 1;
       depth += 1;
-      if randint(0,3) != 0 and child_direction != "n":
-         adjacent_room = self.find_room(x,y+1);
+      adjacent_room = self.find_room(x,y+1);
+      if (randint(0,3) != 0 and child_direction != "n") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"n",index,depth,x,y+1);
          else:
             adjacent_room.connect("s", room);
             room.connect("n",adjacent_room);
-      if randint(0,3) != 0 and child_direction != "s":
-         adjacent_room = self.find_room(x,y-1);
+      adjacent_room = self.find_room(x,y-1);
+      if (randint(0,3) != 0 and child_direction != "s") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"s",index,depth,x,y-1);
          else:
             adjacent_room.connect("n", room);
             room.connect("s",adjacent_room);
-      if randint(0,3) != 0 and child_direction != "e":
-         adjacent_room = self.find_room(x+1,y);
+      adjacent_room = self.find_room(x+1,y);
+      if (randint(0,3) != 0 and child_direction != "e") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"e",index,depth,x+1,y);
          else:
             adjacent_room.connect("w", room);
             room.connect("e",adjacent_room);
-      if randint(0,3) != 0 and child_direction != "w":
-         adjacent_room = self.find_room(x-1,y);
+      adjacent_room = self.find_room(x-1,y);
+      if (randint(0,3) != 0 and child_direction != "w") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"w",index,depth,x-1,y);
          else:

@@ -20,10 +20,7 @@ class player:
    def __init__(self,user,db,irc_con,channel, silent):
       self.name = re.sub("@","",user);
       self.db = db;
-#      try:
       self.weapon = db.random_weapon_type() + " " +  db.random_weapon();
-#      except:
-#         self.weapon = "silly thing";
       self.irc_con = irc_con;
       self.channel = channel;
       if(silent == 0):

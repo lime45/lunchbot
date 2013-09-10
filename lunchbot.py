@@ -715,7 +715,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
              player.set_health (player.get_health() + 5);
              if player.get_health() > 100:
                 player.set_health(100);
-       t = Timer(3600,self.do_heal,self);
+       t = Timer(3600,self.do_heal);
+       t.start();
                 
 
 

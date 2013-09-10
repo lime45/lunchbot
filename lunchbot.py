@@ -252,7 +252,21 @@ class web_socket:
       while True:
          command = connection.recv(32);
          if(command == "locations"):
-            room_str = "{\n\"rooms\":[\n";
+            room_str = "{\n";
+            max_x = 0;
+            max_y = 0;
+            for room in self.bot.rooms:
+               if room.x > max_x:
+                  max_x = room.x;
+               if -room.x > max_x:
+                  max_x = -room.x;
+               if room.y > max_y:
+                  max_y = room.y;
+               if -room.y > max_y:
+                  max_y = -room.y;
+            room_str = room_str + "\"height\":\"" + str(max_y*2 + 1) + "\",\n";
+            room_str = room_str + "\"width\":\"" + str(max_x*2 + 1) + "\",\n";
+            room_str = room_str + "\"rooms\":[\n";
             first_room = 1;
             for room in self.bot.rooms:
                if first_room == 1:
@@ -335,7 +349,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
        return None;
 
     def add_room(self, parent, parent_direction, index, depth,x,y):
-      if depth == 3:
+      if depth == 5:
          return index;
       room_name = choice(self.players).name + "'s " + self.db.random_room();
       if randint(0,3) == 1:

@@ -348,14 +348,17 @@ class TestBot(irc.bot.SingleServerIRCBot):
        self.rooms.append(room);
        index = 1;
        depth = 0;
-       if randint(0,3) != 0:
+       if 1 != 0:
           index =  self.add_room(room,"n",index,depth,0,1);
-       if randint(0,3) != 0:
-          index =  self.add_room(room,"s",index,depth,0,-1);
-       if randint(0,3) != 0:
-          index =  self.add_room(room,"e",index,depth,1,0);
-       if randint(0,3) != 0:
-          index =  self.add_room(room,"w",index,depth,-1,0);
+       if 1 != 0:
+          if self.find_room(0,-1) is None:
+             index =  self.add_room(room,"s",index,depth,0,-1);
+       if 1 != 0:
+          if self.find_room(1,0) is None:
+             index =  self.add_room(room,"e",index,depth,1,0);
+       if 1 != 0:
+          if self.find_room(-1,0) is None:
+             index =  self.add_room(room,"w",index,depth,-1,0);
     def find_room(self,x,y):
        for room in self.rooms:
           if room.x == x and room.y == y:
@@ -386,28 +389,28 @@ class TestBot(irc.bot.SingleServerIRCBot):
       index += 1;
       depth += 1;
       adjacent_room = self.find_room(x,y+1);
-      if (randint(0,3) != 0 and child_direction != "n") or (adjacent_room is not None):
+      if (randint(0,2) != 0 and child_direction != "n") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"n",index,depth,x,y+1);
          else:
             adjacent_room.connect("s", room);
             room.connect("n",adjacent_room);
       adjacent_room = self.find_room(x,y-1);
-      if (randint(0,3) != 0 and child_direction != "s") or (adjacent_room is not None):
+      if (randint(0,2) != 0 and child_direction != "s") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"s",index,depth,x,y-1);
          else:
             adjacent_room.connect("n", room);
             room.connect("s",adjacent_room);
       adjacent_room = self.find_room(x+1,y);
-      if (randint(0,3) != 0 and child_direction != "e") or (adjacent_room is not None):
+      if (randint(0,2) != 0 and child_direction != "e") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"e",index,depth,x+1,y);
          else:
             adjacent_room.connect("w", room);
             room.connect("e",adjacent_room);
       adjacent_room = self.find_room(x-1,y);
-      if (randint(0,3) != 0 and child_direction != "w") or (adjacent_room is not None):
+      if (randint(0,2) != 0 and child_direction != "w") or (adjacent_room is not None):
          if adjacent_room is None:
             index =  self.add_room(room,"w",index,depth,x-1,y);
          else:

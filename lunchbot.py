@@ -21,6 +21,7 @@ class player:
       self.name = re.sub("@","",user);
       self.db = db;
       self.weapon = db.random_weapon_type() + " " +  db.random_weapon();
+      self.items = [];
       self.irc_con = irc_con;
       self.channel = channel;
       if(silent == 0):
@@ -36,6 +37,18 @@ class player:
       return self.hp;
    def set_health(self,val):
       self.hp=val;
+   def add_item(self,val):
+      self.items.append(val);
+   def rm_item(self,val):
+      self.items.remove(val);
+   def equip_item(self,val):
+      self.rm_item(val);
+      weapon = self.get_weapon();
+      if(weapon != "Nothing"):
+         self.add_item(weapon);
+      self.weapon = val;
+
+
 
 class location:
    def __init__(self,db,name,index, x, y):
@@ -587,10 +600,17 @@ class TestBot(irc.bot.SingleServerIRCBot):
           for player in self.players:
              if player.name == name:
                 weapon = player.get_weapon();
+                items = "";
+                for item in player.items:
+                   if items == "":
+                      items = items + " and has ";
+                   else:
+                      items = items + ", "
+                   items = items + item;
           if (weapon.startswith(('a','e','i','o','u','A','E','I','O','U'))):
-             c.privmsg(nick, name + " is equipped with an " + weapon);
+             c.privmsg(nick, name + " is equipped with an " + weapon + items);
           else:
-             c.privmsg(nick, name + " is equipped with a " + weapon);
+             c.privmsg(nick, name + " is equipped with a " + weapon + items);
        if(re.match(" *health",args,re.IGNORECASE)):
           health = 0;
           for player in self.players:
@@ -633,11 +653,42 @@ class TestBot(irc.bot.SingleServerIRCBot):
              if player.name == name:
                 for item in player.location.items:
                    if re.match(".*" + item + ".*",args,re.IGNORECASE):
-                      old_weapon = player.weapon;
-                      player.weapon = item;
+                      player.add_item(item);
                       player.location.items.remove(item);
-                      player.location.items.append(old_weapon);
-                      c.privmsg(self.channel, name + " dropped " + old_weapon + " and picked up " + item);
+                      c.privmsg(self.channel, name + " picked up " + item);
+       if(re.match(" *drop.*",args,re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                for item in player.items:
+                   if(re.match(".*" + item + ".*",args,re.IGNORECASE)):
+                      player.rm_item(item);
+                      player.location.items.append(item);
+                      c.privmsg(self.channel, name + " dropped " + item);
+       if(re.match(" *equip.*",args, re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                for item in player.items:
+                   if(re.match(".*" + item + ".*",args,re.IGNORECASE)):
+                      player.equip_item(item);
+                      c.privmsg(self.channel, name + " equipped " + item);
+       if(re.match(" *steal.*",args, re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                for victim in player.location.people:
+                   if(re.match(".*" + victim.name + ".*",args)):
+                      item = randint(0,10);
+                      stolen = "Nothing";
+                      if item == 0:
+                         stolen = victim.weapon;
+                         victim.weapon = "Nothing";
+                      elif (item-1) < len(victim.items):
+                         stolen = victim.items[item-1];
+                         victim.rm_item(stolen);
+                         player.add_item(stolen);
+                      if stolen == "Nothing":
+                         c.privmsg(self.channel, name + " failed to steal anything from " + victim.name);
+                      else:
+                         c.privmsg(self.channel, name + " stole " + stolen + " from " + victim.name);
        if(re.match(" *go.*",args, re.IGNORECASE)):
           directions = args.split(" ");
           for player in self.players:

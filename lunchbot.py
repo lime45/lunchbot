@@ -8,6 +8,7 @@ from random import choice
 import thread
 from threading import Timer
 from datetime import datetime
+import string
 import time
 import re
 import subprocess
@@ -655,7 +656,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
           for player in self.players:
              if player.name == name:
                 for item in player.location.items:
-                   if re.match(".*" + item + ".*",args,re.IGNORECASE):
+                   if string.find(args,item) != -1:
                       player.add_item(item);
                       player.location.items.remove(item);
                       c.privmsg(self.channel, name + " picked up " + item);
@@ -663,7 +664,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
           for player in self.players:
              if player.name == name:
                 for item in player.items:
-                   if(re.match(".*" + item + ".*",args,re.IGNORECASE)):
+                   if string.find(args,item) != -1:
                       player.rm_item(item);
                       player.location.items.append(item);
                       c.privmsg(self.channel, name + " dropped " + item);
@@ -671,7 +672,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
           for player in self.players:
              if player.name == name:
                 for item in player.items:
-                   if(re.match(".*" + item + ".*",args,re.IGNORECASE)):
+                   if string.find(args,item) != -1:
                       player.equip_item(item);
                       c.privmsg(self.channel, name + " equipped " + item);
        if(re.match(" *steal.*",args, re.IGNORECASE)):

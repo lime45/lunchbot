@@ -630,6 +630,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
              for player in source_player.location.people:
                 if target == player.name:
                    damage = randint(0,10) - 3;
+                   if source_player.get_weapon() == "Nothing":
+                      damage = damage - 5;
                    if damage >= 0:
                       health = player.get_health();
                       player.set_health(health - damage);

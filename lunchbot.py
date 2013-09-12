@@ -320,8 +320,6 @@ class web_socket:
                room_str = room_str + "\n]\n";
                room_str = room_str + "}";
             room_str = room_str + "\n]\n}";
-            print (room_str);
-
             connection.sendall(room_str.encode('ascii', 'ignore'));
             connection.close();
             return;
@@ -650,7 +648,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 if player.name == name:
                    msg = "you are in " + player.location.name;
                 if(re.match(".* " + player.name + ".*", args)):
-                   c.privmsg(self.channel, player.name + " is in " + player.location.name);
+                   c.privmsg(nick, player.name + " is in " + player.location.name);
                    match = 1;
           except:
              msg = "no idea";
@@ -736,7 +734,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                          victim.rm_item(stolen);
                          player.add_item(stolen);
                       if stolen == "Nothing":
-                         c.privmsg(self.channel, name + " failed to steal anything from " + victim.name);
+                         c.privmsg(nick, name + " failed to steal anything from " + victim.name);
                       else:
                          c.privmsg(self.channel, name + " stole " + stolen + " from " + victim.name);
        if(re.match(" *go.*",args, re.IGNORECASE)):
@@ -773,7 +771,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
                          c.privmsg(nick,"There is nothing to the west");
                       else:
                          new_location = player.location.west;
-                         print("setting new_location" + new_location.name);
                          player.location.remove_person(player);
                          player.location = new_location;
                          player.location.add_person(player);

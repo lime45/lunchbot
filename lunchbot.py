@@ -602,7 +602,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
        if(re.match(" *inventory",args,re.IGNORECASE)):
           weapon = "nothing";
           for player in self.players:
-             if player.name == name:
+             if player.name == name or string.find(args, player.name) != -1:
+                print(player.name + ":" + args);
                 weapon = player.get_weapon();
                 items = "";
                 for item in player.items:
@@ -611,6 +612,9 @@ class TestBot(irc.bot.SingleServerIRCBot):
                    else:
                       items = items + ", "
                    items = items + item;
+                if string.find(args, player.name) != -1:
+                   name = player.name;
+                   break;
           if (weapon.startswith(('a','e','i','o','u','A','E','I','O','U'))):
              c.privmsg(nick, name + " is equipped with an " + weapon + items);
           else:

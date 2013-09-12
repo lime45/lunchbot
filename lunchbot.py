@@ -697,8 +697,10 @@ class TestBot(irc.bot.SingleServerIRCBot):
        #
        for player in self.players:
           if player.name == name:
+             if player.get_health() < 0:
+                c.privmsg(nick,player.name + " is in too much pain to do anything");
              if player.busy != 0:
-                c.privmsg(self.channel,player.name + " is too busy " + player.activity + " to do anything else");
+                c.privmsg(nick,player.name + " is too busy " + player.activity + " to do anything else");
                 return;
        if(re.match(" *take.*",args,re.IGNORECASE)):
           for player in self.players:

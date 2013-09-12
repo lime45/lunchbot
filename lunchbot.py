@@ -32,6 +32,8 @@ class player:
             self.irc_con.privmsg(self.channel, self.name + " is equipped with a " + self.weapon);
       self.hp=100;
       self.location_set = 0;
+      self.busy=0;
+      self.activity = "doing nothing";
    def get_weapon(self):
       return self.weapon;
    def get_health(self):
@@ -653,7 +655,49 @@ class TestBot(irc.bot.SingleServerIRCBot):
           except:
              msg = "no idea";
           if match == 0:
-             c.privmsg(self.channel,msg);
+             c.privmsg(nick,msg);
+       if(re.match(" *look.*",args, re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                location = player.location;
+          try:
+             name = "";
+             first = 1;
+             for person in location.people:
+                if first == 1:
+                   first = 0;
+                else:
+                   name = name + ",";
+                name = name + " " + person.name;
+             things = "";
+             first = 1;
+             for item in location.items:
+                if first == 1:
+                   first = 0;
+                else:
+                   things = things + ",";
+                things = things + " " + item;
+             c.privmsg(nick, "You are in " + location.name + " with" + name + " and the room contains" + things);
+             exits = "";
+             if(location.north_index != -1):
+                exits = exits + "To the north is " + location.north.name + ". ";
+             if(location.south_index != -1):
+                exits = exits + "To the south is " + location.south.name + ". ";
+             if(location.east_index != -1):
+                exits = exits + "To the east is " + location.east.name + ". ";
+             if(location.west_index != -1):
+                exits = exits + "To the west is " + location.west.name + ". ";
+             c.privmsg(nick, exits);
+          except:
+             c.privmsg(nick, "I have no idea where you are or who you are.");
+       #
+       # Things above this point should be non-action and below should be action
+       #
+       for player in self.players:
+          if player.name == name:
+             if player.busy != 0:
+                c.privmsg(self.channel,player.name + " is too busy " + player.activity + " to do anything else");
+                return;
        if(re.match(" *take.*",args,re.IGNORECASE)):
           for player in self.players:
              if player.name == name:
@@ -737,40 +781,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
              c.privmsg(self.channel,"you are now in " + new_location.name);
           except:
              c.privmsg(nick,"I don't know where you were trying to go");
-       if(re.match(" *look.*",args, re.IGNORECASE)):
-          for player in self.players:
-             if player.name == name:
-                location = player.location;
-          try:
-             name = "";
-             first = 1;
-             for person in location.people:
-                if first == 1:
-                   first = 0;
-                else:
-                   name = name + ",";
-                name = name + " " + person.name;
-             things = "";
-             first = 1;
-             for item in location.items:
-                if first == 1:
-                   first = 0;
-                else:
-                   things = things + ",";
-                things = things + " " + item;
-             c.privmsg(nick, "You are in " + location.name + " with" + name + " and the room contains" + things);
-             exits = "";
-             if(location.north_index != -1):
-                exits = exits + "To the north is " + location.north.name + ". ";
-             if(location.south_index != -1):
-                exits = exits + "To the south is " + location.south.name + ". ";
-             if(location.east_index != -1):
-                exits = exits + "To the east is " + location.east.name + ". ";
-             if(location.west_index != -1):
-                exits = exits + "To the west is " + location.west.name + ". ";
-             c.privmsg(nick, exits);
-          except:
-             c.privmsg(nick, "I have no idea where you are or who you are.");
        if(re.match(" *tag .*",args, re.IGNORECASE)):
           if(self.it == "" or self.it == name):
              for player in self.players:
@@ -778,7 +788,27 @@ class TestBot(irc.bot.SingleServerIRCBot):
                    self.it = player.name;
                    c.privmsg(self.channel, self.it + " is IT");
                    return;
-
+       if(re.match(" *forge .*",args, re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                duration = randint(1,5);
+                weapon = re.sub(" *forge ","",args);
+                c.privmsg(self.channel, name + " is forging a " + weapon + " and it will take him " + str(duration) +  " minutes");
+                player.busy = duration;
+                player.activity = "forging";
+                player.items.append(weapon);
+       if(re.match(" *heal",args, re.IGNORECASE)):
+          for player in self.players:
+             if player.name == name:
+                duration = randint(1,5);
+                health = randint(5,20);
+                c.privmsg(self.channel, name + " is healing for " + str(health) + "hp and it will take " + str(duration) + " minutes");
+                health = health + player.get_health();
+                player.busy = duration;
+                player.activity = "healing";
+                if(health > 100):
+                   health = 100;
+                player.set_health(health);
 
     def do_heal(self):
        for player in self.players:
@@ -906,6 +936,11 @@ class TestBot(irc.bot.SingleServerIRCBot):
           if prev_day != cur_day:
              self.ddate_topic(irc_con);
           prev_day = cur_day;
+          for player in self.players:
+             if player.busy > 0:
+                player.busy = player.busy - 1;
+                if player.busy == 0:
+                   irc_con.privmsg(channel,player.name + " is done " + player.activity);
           time.sleep(60);
     def rm_bot(self,nick):
        bot = RemovedBot(self.channel, nick, self.server);

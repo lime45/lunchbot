@@ -735,6 +735,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                       if item == 0:
                          stolen = victim.weapon;
                          victim.weapon = "Nothing";
+                         player.add_item(stolen);
                       elif (item-1) < len(victim.items):
                          stolen = victim.items[item-1];
                          victim.rm_item(stolen);

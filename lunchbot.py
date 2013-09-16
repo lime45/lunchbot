@@ -751,7 +751,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 for direction in directions:
                    if direction == "n" or direction == "north":
                       if player.location.north_index == -1:
-                         c.privmsg(nick,"There is nothing to the north");
+                         c.privmsg(self.channel,name + " runs into a wall for 5 damage");
+                         player.set_health(player.get_health() - 5);
                       else:
                          new_location = player.location.north;
                          player.location.remove_person(player);
@@ -759,7 +760,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
                          player.location.add_person(player);
                    if direction == "s" or direction == "south":
                       if player.location.south_index == -1:
-                         c.privmsg(nick,"There is nothing to the south");
+                         c.privmsg(self.channel,name + " runs into a wall for 5 damage");
+                         player.set_health(player.get_health() - 5);
                       else:
                          new_location = player.location.south;
                          player.location.remove_person(player);
@@ -767,7 +769,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
                          player.location.add_person(player);
                    if direction == "e" or direction == "east":
                       if player.location.east_index == -1:
-                         c.privmsg(nick,"There is nothing to the east");
+                         c.privmsg(self.channel,name + " runs into a wall for 5 damage");
+                         player.set_health(player.get_health() - 5);
                       else:
                          new_location = player.location.east;
                          player.location.remove_person(player);
@@ -775,14 +778,15 @@ class TestBot(irc.bot.SingleServerIRCBot):
                          player.location.add_person(player);
                    if direction == "w" or direction == "west":
                       if player.location.west_index == -1:
-                         c.privmsg(nick,"There is nothing to the west");
+                         c.privmsg(self.channel,name + " runs into a wall for 5 damage");
+                         player.set_health(player.get_health() - 5);
                       else:
                          new_location = player.location.west;
                          player.location.remove_person(player);
                          player.location = new_location;
                          player.location.add_person(player);
           try:
-             c.privmsg(self.channel,"you are now in " + new_location.name);
+             c.privmsg(nick,name + " is now in " + new_location.name);
           except:
              c.privmsg(nick,"I don't know where you were trying to go");
        if(re.match(" *tag .*",args, re.IGNORECASE)):

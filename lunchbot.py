@@ -935,8 +935,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
                    self.ddate_topic(irc_con);
                    self.topic = "ddate";
                 called=0;
-             if cur_time == '0930':
-                irc_con.privmsg(channel,"It is 9:30 is jwclark in yet?");
           if prev_day != cur_day:
              self.ddate_topic(irc_con);
           prev_day = cur_day;

@@ -34,6 +34,7 @@ class player:
       self.location_set = 0;
       self.busy=0;
       self.forging = "Nothing"
+      self.healing = 0;
       self.activity = "doing nothing";
    def get_weapon(self):
       return self.weapon;
@@ -58,10 +59,22 @@ class player:
    def finish_forge(self):
       self.items.append(self.forging);
       self.forging = "Nothing";
-      self.activity = "doing nothing";
+   def start_heal(self, value, time):
+      self.healing = value;
+      self.activity = "healing";
+      self.busy = time;
+   def finish_heal(self):
+      health = self.get_health() + self.healing;
+      if health > 100:
+         health = 100;
+      self.set_health(health);
+      self.healing = 0;
    def finish_activity(self):
       if self.activity == "forging":
          self.finish_forge();
+      if self.activity == "healing":
+         self.finish_heal();
+      self.activity = "doing nothing";
 
 class location:
    def __init__(self,db,name,index, x, y):
@@ -706,6 +719,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
           if player.name == name:
              if player.get_health() < 0:
                 c.privmsg(nick,player.name + " is in too much pain to do anything");
+                return;
              if player.busy != 0:
                 c.privmsg(nick,player.name + " is too busy " + player.activity + " to do anything else");
                 return;
@@ -810,18 +824,13 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 weapon = re.sub(" *forge ","",args);
                 c.privmsg(self.channel, name + " is forging a " + weapon + " and it will take him " + str(duration) +  " minutes");
                 player.start_forge(weapon,duration);
-       if(re.match(" *heal\b",args, re.IGNORECASE)):
+       if(re.match(r" *heal\b",args, re.IGNORECASE)):
           for player in self.players:
              if player.name == name:
                 duration = randint(1,5);
                 health = randint(5,20);
                 c.privmsg(self.channel, name + " is healing for " + str(health) + "hp and it will take " + str(duration) + " minutes");
-                health = health + player.get_health();
-                player.busy = duration;
-                player.activity = "healing";
-                if(health > 100):
-                   health = 100;
-                player.set_health(health);
+                player.start_heal(health,duration);
 
     def do_heal(self):
        for player in self.players:

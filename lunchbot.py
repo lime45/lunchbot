@@ -623,7 +623,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
           weapon = "nothing";
           for player in self.players:
              if player.name == name or string.find(args, player.name) != -1:
-                print(player.name + ":" + args);
                 weapon = player.get_weapon();
                 items = "";
                 for item in player.items:

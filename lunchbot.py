@@ -33,6 +33,7 @@ class player:
       self.hp=100;
       self.location_set = 0;
       self.busy=0;
+      self.forging = "Nothing"
       self.activity = "doing nothing";
    def get_weapon(self):
       return self.weapon;
@@ -50,8 +51,17 @@ class player:
       if(weapon != "Nothing"):
          self.add_item(weapon);
       self.weapon = val;
-
-
+   def start_forge(self, item, time):
+      self.forging = item;
+      self.busy = time;
+      self.activity = "forging";
+   def finish_forge(self):
+      self.items.append(self.forging);
+      self.forging = "Nothing";
+      self.activity = "doing nothing";
+   def finish_activity(self):
+      if self.activity == "forging":
+         self.finish_forge();
 
 class location:
    def __init__(self,db,name,index, x, y):
@@ -195,8 +205,6 @@ class sqlite_db:
       curs.execute("SELECT * FROM rooms ORDER BY RANDOM() LIMIT 1");
       return curs.fetchone()[1];
 
-
-
 class RemovedBot(irc.bot.SingleServerIRCBot):
     def __init__(self, channel, nickname, server, port=6667):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname + "1", nickname + "1")
@@ -323,7 +331,6 @@ class web_socket:
             connection.sendall(room_str.encode('ascii', 'ignore'));
             connection.close();
             return;
-
 
 class TestBot(irc.bot.SingleServerIRCBot):
     index=0;
@@ -802,9 +809,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 duration = randint(1,5);
                 weapon = re.sub(" *forge ","",args);
                 c.privmsg(self.channel, name + " is forging a " + weapon + " and it will take him " + str(duration) +  " minutes");
-                player.busy = duration;
-                player.activity = "forging";
-                player.items.append(weapon);
+                player.start_forge(weapon,duration);
        if(re.match(" *heal\b",args, re.IGNORECASE)):
           for player in self.players:
              if player.name == name:
@@ -826,8 +831,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 player.set_health(100);
        t = Timer(3600,self.do_heal);
        t.start();
-                
-
 
     def do_command(self, e, args):
         nick = e.target
@@ -947,13 +950,12 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 player.busy = player.busy - 1;
                 if player.busy == 0:
                    irc_con.privmsg(channel,player.name + " is done " + player.activity);
+                   player.finish_activity();
+
           time.sleep(60);
     def rm_bot(self,nick):
        bot = RemovedBot(self.channel, nick, self.server);
        bot.start();
-
-
-
 
 def main():
     import sys

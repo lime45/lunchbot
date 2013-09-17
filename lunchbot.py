@@ -645,39 +645,6 @@ class TestBot(irc.bot.SingleServerIRCBot):
              if player.name == name:
                 health = player.get_health();
           c.privmsg(nick, name + " has " + str(health) + " hp");
-       if(re.match(" *attack.*",args, re.IGNORECASE)):
-          targets = args.split(" ");
-          for player in self.players:
-             if player.name == name:
-                source_player = player;
-          for target in targets:
-             for player in source_player.location.people:
-                if target == player.name:
-                   damage = randint(0,10) - 3;
-                   if source_player.get_weapon() == "Nothing":
-                      damage = damage - 5;
-                   if damage >= 0:
-                      health = player.get_health();
-                      player.set_health(health - damage);
-                      c.privmsg(self.channel,source_player.name + " attacks " + target + " with their " + source_player.get_weapon() + " for " + str(damage) + " damage");
-                      c.privmsg(self.channel, target + " is now at " + str(player.get_health()) + " hp");
-                   else:
-                      source_player.set_health(source_player.get_health() + damage);
-                      c.privmsg(self.channel, source_player.name + " accidentally attacks themselves with " + source_player.get_weapon() + " and is now at " + str(source_player.get_health()) + " hp.");
-       if(re.match(" *where.*",args, re.IGNORECASE)):
-          match = 0;
-          msg = "were you looking for someone?";
-          try:
-             for player in self.players:
-                if player.name == name:
-                   msg = "you are in " + player.location.name;
-                if(re.match(".* " + player.name + ".*", args)):
-                   c.privmsg(nick, player.name + " is in " + player.location.name);
-                   match = 1;
-          except:
-             msg = "no idea";
-          if match == 0:
-             c.privmsg(nick,msg);
        if(re.match(" *look.*",args, re.IGNORECASE)):
           for player in self.players:
              if player.name == name:
@@ -723,6 +690,39 @@ class TestBot(irc.bot.SingleServerIRCBot):
              if player.busy != 0:
                 c.privmsg(nick,player.name + " is too busy " + player.activity + " to do anything else");
                 return;
+       if(re.match(" *attack.*",args, re.IGNORECASE)):
+          targets = args.split(" ");
+          for player in self.players:
+             if player.name == name:
+                source_player = player;
+          for target in targets:
+             for player in source_player.location.people:
+                if target == player.name:
+                   damage = randint(0,10) - 3;
+                   if source_player.get_weapon() == "Nothing":
+                      damage = damage - 5;
+                   if damage >= 0:
+                      health = player.get_health();
+                      player.set_health(health - damage);
+                      c.privmsg(self.channel,source_player.name + " attacks " + target + " with their " + source_player.get_weapon() + " for " + str(damage) + " damage");
+                      c.privmsg(self.channel, target + " is now at " + str(player.get_health()) + " hp");
+                   else:
+                      source_player.set_health(source_player.get_health() + damage);
+                      c.privmsg(self.channel, source_player.name + " accidentally attacks themselves with " + source_player.get_weapon() + " and is now at " + str(source_player.get_health()) + " hp.");
+       if(re.match(" *where.*",args, re.IGNORECASE)):
+          match = 0;
+          msg = "were you looking for someone?";
+          try:
+             for player in self.players:
+                if player.name == name:
+                   msg = "you are in " + player.location.name;
+                if(re.match(".* " + player.name + ".*", args)):
+                   c.privmsg(nick, player.name + " is in " + player.location.name);
+                   match = 1;
+          except:
+             msg = "no idea";
+          if match == 0:
+             c.privmsg(nick,msg);
        if(re.match(" *take.*",args,re.IGNORECASE)):
           for player in self.players:
              if player.name == name:

@@ -805,7 +805,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 player.busy = duration;
                 player.activity = "forging";
                 player.items.append(weapon);
-       if(re.match(" *heal",args, re.IGNORECASE)):
+       if(re.match(" *heal\b",args, re.IGNORECASE)):
           for player in self.players:
              if player.name == name:
                 duration = randint(1,5);

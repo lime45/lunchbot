@@ -311,7 +311,7 @@ class web_socket:
                else:
                   room_str = room_str + ",\n";
                room_str = room_str + "{\n";
-               room_str = room_str + "\"name\": \"" + room.name + "\",\n";
+               room_str = room_str + "\"name\": \"" + re.sub("\"","\\\"",room.name) + "\",\n";
                room_str = room_str + "\"x\": \"" + str(room.x) + "\",\n";
                room_str = room_str + "\"y\": \"" + str(room.y) + "\",\n";
 

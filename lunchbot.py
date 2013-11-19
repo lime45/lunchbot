@@ -564,15 +564,15 @@ class TestBot(irc.bot.SingleServerIRCBot):
               users = chobj.users()
               users.sort()
               c.privmsg(nick, "Users: " + ", ".join(users))
-        if re.match("rm .*",e.arguments[0]):
-           command = 1;
-           try:
-              why = e.arguments[0].split(" ",2)[2];
-           except:
-              why = "'cause I hate him";
-           c.kick(nick,e.arguments[0].split()[1],why);
-           thread.start_new_thread(self.rm_bot,(e.arguments[0].split()[1],));
-           
+#        if re.match("rm .*",e.arguments[0]):
+#           command = 1;
+#           try:
+#              why = e.arguments[0].split(" ",2)[2];
+#           except:
+#              why = "'cause I hate him";
+#           c.kick(nick,e.arguments[0].split()[1],why);
+#           thread.start_new_thread(self.rm_bot,(e.arguments[0].split()[1],));
+#           
         if re.match(".*talk to me.*",e.arguments[0],re.IGNORECASE):
            command = 1;
            self.talk_count = 5;

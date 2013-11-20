@@ -266,6 +266,66 @@ class RemovedBot(irc.bot.SingleServerIRCBot):
              c.privmsg(self.channel, "I hate you!");
           elif (choice < 40):
              c.kick(self.channel,name, "I hate that guy");
+
+class RandomBot(irc.bot.SingleServerIRCBot):
+   def __init__(self, channel, nickname, server, room_map, parent_bot, port=6667):
+      irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
+      self.original_name = nickname;
+      self.channel = channel
+      self.room_map = room_map;
+      self.parent_bot = parent_bot;
+      self.count = randint(20,100);
+
+   def on_nicknameinuse(self, c, e):
+      print("nick name in use " + c.get_nickname());
+   
+   def on_welcome(self, c, e):
+      c.join(self.channel)
+      thread.start_new_thread(self.do_stuff,(c,));
+
+   def do_something(self,c):
+      try:
+         action = randint(0,5);
+         match = 0;
+         while match == 0:
+            for room in self.room_map:
+               for player in room.people:
+                  if player.name == self.original_name:
+                     actual_room = room;
+                     actual_player = player;
+                     match=1;
+            time.sleep(1);
+         if(action == 0):
+            victim = choice(actual_room.people);
+            c.privmsg(self.parent_bot,"> attack " + victim.name);
+         elif (action == 1):
+            victim = choice(actual_room.people);
+            c.privmsg(self.parent_bot,"> steal " + victim.name);
+         elif (action == 2):
+            direction = choice(["n","s","e","w"]);
+            c.privmsg(self.parent_bot,"> go " + direction);
+         elif (action == 3):
+            if len(actual_room.items) > 0:
+               item = choice(actual_room.items);
+               c.privmsg(self.parent_bot,">take " + item);
+         elif (action == 4):
+            if len(actual_player.items) > 0:
+               item = choice(actual_player.items);
+               c.privmsg(self.parent_bot,">equip " + item);
+         elif (action == 5):
+            if len(actual_player.items) > 0:
+               item = choice(actual_player.items);
+               c.privmsg(self.parent_bot,">drop " + item);
+      except:
+         print("something was messed up");
+
+   def do_stuff(self,c):
+      while self.count > 0 :
+         self.do_something(c);
+         sleep_time = randint(1,1000);
+         time.sleep(sleep_time);
+         self.count = self.count -1;
+      self.die();
    
 class web_socket:
    def __init__(self,bot):
@@ -350,6 +410,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
     places = [];
     topic = "none";
     talk_count = 0;
+    zombies = [];
     def __init__(self, channel, nickname, server, database, port=6667):
         self.channel = channel
         self.server = server
@@ -362,6 +423,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         self.rooms_init = 0;
         self.it = "";
         self.web_socket = web_socket(self);
+        self.port = port;
 
     def init_rooms(self):
        self.rooms = [];
@@ -926,10 +988,20 @@ class TestBot(irc.bot.SingleServerIRCBot):
               self.db.add_weapon_type(cmd[1]);
            elif re.match(" *>.*",args):
               self.do_action(c,e,re.sub(">","",args));
+           elif cmd[0] == "zombie":
+              if len(cmd) > 1:
+                 zombie = RandomBot(self.channel,cmd[1],self.server, self.rooms, self.nick);
+                 thread.start_new_thread(self.start_zombie_bot,(zombie,));
+                 self.zombies.append(zombie);
            else:
                 c.privmsg(nick, "Whatchu talkin' 'bout Willis? I ain't goin' to " + args)
         except:
             c.privmsg(nick, "Someone tried to crash me");
+
+    def start_zombie_bot(self,bot):
+       bot.start();
+       del bot;
+
     def reminder_thread(self,irc_con,channel):
        called = 0;
        prev_day="0"
